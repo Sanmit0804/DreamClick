@@ -18,7 +18,7 @@ export default function Login() {
                 <img
                     src="https://i.pinimg.com/736x/39/ee/7f/39ee7f4ec3fa453c361b10f28107d799.jpg"
                     alt="Login Illustration"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-auto object-cover"
                 />
                 {/* Optional overlay for better contrast */}
                 <div className="absolute inset-0 bg-black/20" />
