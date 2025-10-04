@@ -12,20 +12,20 @@ import { Label } from "@/components/ui/label"
 
 export default function Login() {
     return (
-        <div className="flex h-screen">
+        <div className="flex h-screen bg-black">
             {/* Left Image Section */}
-            <div className="w-1/2 h-full relative">
+            <div className="w-1/2 h-full relative overflow-hidden">
                 <img
                     src="https://i.pinimg.com/736x/39/ee/7f/39ee7f4ec3fa453c361b10f28107d799.jpg"
                     alt="Login Illustration"
-                    className="absolute inset-0 w-full h-auto object-cover"
+                    className="w-full h-full object-contain"
                 />
-                {/* Optional overlay for better contrast */}
                 <div className="absolute inset-0 bg-black/20" />
             </div>
 
+
             {/* Divider Line */}
-            <div className="w-[2px] bg-gray-200 h-full" />
+            {/* <div className="w-[0.1px] bg-gray-500 h-full" /> */}
 
             {/* Right Login Form */}
             <div className="w-1/2 flex items-center justify-center">
@@ -53,7 +53,7 @@ export default function Login() {
                                         <Label htmlFor="password">Password</Label>
                                         <a
                                             href="#"
-                                            className="ml-auto text-sm text-blue-600 hover:underline"
+                                            className="ml-auto text-sm text-gray-200 hover:underline"
                                         >
                                             Forgot?
                                         </a>
@@ -69,7 +69,7 @@ export default function Login() {
                         </Button>
                         <p className="text-sm text-gray-500 mt-2">
                             Don’t have an account?{" "}
-                            <a href="#" className="text-blue-600 hover:underline">
+                            <a href="#" className="text-gray-200 hover:underline">
                                 Sign up
                             </a>
                         </p>
