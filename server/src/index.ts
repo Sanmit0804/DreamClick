@@ -1,7 +1,7 @@
 // server/src/index.ts
 import express, { type Request, type Response } from "express";
 import connectDB from "./config/db.js";
-import userRoutes from "./routes/user.route.js";
+import routes from './routes/index.js';
 
 const app = express();
 app.use(express.json());
@@ -10,10 +10,10 @@ app.use(express.json());
 connectDB();
 
 // Routes
-app.use("/api/users", userRoutes);
+app.use("/api", routes);
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello There it's Sanmit Suthar");
+  res.send("Hello World");
 });
 
 const PORT = process.env.PORT || 5000;
