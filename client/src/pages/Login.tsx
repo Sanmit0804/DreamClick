@@ -67,9 +67,6 @@ export default function Login() {
                         <Button type="submit" className="w-full">
                             Login
                         </Button>
-                        <Button variant="outline" className="w-full">
-                            Login with Google
-                        </Button>
                         <p className="text-sm text-gray-500 mt-2">
                             Don’t have an account?{" "}
                             <a href="#" className="text-blue-600 hover:underline">
