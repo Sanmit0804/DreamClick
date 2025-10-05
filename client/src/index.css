@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Importing scss here  */
+@import "./scss/login.scss";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
