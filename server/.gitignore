@@ -9,18 +9,18 @@ yarn-error.log*
 .env.local
 .env.*.local
 
-# Logs
-logs/
-*.log
+# Build output
+dist/
+build/
+coverage/
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Build output
-dist/
-build/
-out/
+# Logs
+logs/
+*.log
 
 # IDE files
 .vscode/
