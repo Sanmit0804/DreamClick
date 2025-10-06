@@ -37,80 +37,79 @@ interface ApiError {
     error?: string;
 }
 
-const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-// Create axios instance with default config
+// Create axios instance with default config (without withCredentials)
 const api = axios.create({
     baseURL: API_URL,
-    withCredentials: true,
     timeout: 10000,
-});
+})
 
 // Request interceptor to add token
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token")
         if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            config.headers.Authorization = `Bearer ${token}`
         }
-        return config;
+        return config
     },
     (error) => {
-        return Promise.reject(error);
+        return Promise.reject(error)
     }
-);
+)
 
 // Response interceptor for error handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.code === 'ERR_NETWORK') {
-            throw new Error('Network error: Unable to connect to the server. Please check if the backend is running.');
+            throw new Error('Network error: Unable to connect to the server. Please check if the backend is running.')
         }
         
         if (error.response?.status === 401) {
             // Auto logout if 401 response
-            localStorage.removeItem("token");
-            window.location.href = '/login';
+            localStorage.removeItem("token")
+            window.location.href = '/login'
         }
         
-        throw error;
+        throw error
     }
-);
+)
 
 class AuthService {
     async login(data: LoginFormData): Promise<AuthResponse> {
         // Validate data before sending
-        const parsed = loginSchema.safeParse(data);
+        const parsed = loginSchema.safeParse(data)
         if (!parsed.success) {
-            throw new Error(parsed.error.issues[0]?.message || 'Validation failed');
+            throw new Error(parsed.error.issues[0]?.message || 'Validation failed')
         }
 
         try {
             const response = await api.post<AuthResponse>('/auth/login', {
                 email: data.email,
                 password: data.password,
-            });
+            })
             
             // Save token
             if (response.data.token) {
-                this.setToken(response.data.token);
+                this.setToken(response.data.token)
             }
             
-            return response.data;
+            return response.data
         } catch (error: any) {
             if (axios.isAxiosError<ApiError>(error)) {
-                const message = error.response?.data?.message || error.response?.data?.error || 'Login failed';
-                throw new Error(message);
+                const message = error.response?.data?.message || error.response?.data?.error || 'Login failed'
+                throw new Error(message)
             }
-            throw error;
+            throw error
         }
     }
 
     async signup(data: SignupFormData): Promise<AuthResponse> {
-        const parsed = signupSchema.safeParse(data);
+        const parsed = signupSchema.safeParse(data)
         if (!parsed.success) {
-            throw new Error(parsed.error.issues[0]?.message || 'Validation failed');
+            throw new Error(parsed.error.issues[0]?.message || 'Validation failed')
         }
 
         try {
@@ -118,59 +117,59 @@ class AuthService {
                 name: data.name,
                 email: data.email,
                 password: data.password,
-            });
+            })
             
             // Save token
             if (response.data.token) {
-                this.setToken(response.data.token);
+                this.setToken(response.data.token)
             }
             
-            return response.data;
+            return response.data
         } catch (error: any) {
             if (axios.isAxiosError<ApiError>(error)) {
-                const message = error.response?.data?.message || error.response?.data?.error || 'Signup failed';
-                throw new Error(message);
+                const message = error.response?.data?.message || error.response?.data?.error || 'Signup failed'
+                throw new Error(message)
             }
-            throw error;
+            throw error
         }
     }
 
     logout(): void {
-        localStorage.removeItem("token");
+        localStorage.removeItem("token")
         // Optional: Call logout endpoint if you have one
-        // await api.post('/auth/logout');
+        // await api.post('/auth/logout')
     }
 
     getToken(): string | null {
-        return localStorage.getItem("token");
+        return localStorage.getItem("token")
     }
 
     setToken(token: string): void {
-        localStorage.setItem("token", token);
+        localStorage.setItem("token", token)
     }
 
     isAuthenticated(): boolean {
-        return !!this.getToken();
+        return !!this.getToken()
     }
 
     // Optional: Get current user info if you have a /me endpoint
     async getCurrentUser() {
         if (!this.isAuthenticated()) {
-            return null;
+            return null
         }
         
         try {
-            const response = await api.get('/auth/me');
-            return response.data;
+            const response = await api.get('/auth/me')
+            return response.data
         } catch (error) {
-            this.logout();
-            return null;
+            this.logout()
+            return null
         }
     }
 }
 
 // Create singleton instance
-const authService = new AuthService();
+const authService = new AuthService()
 
-export default authService;
-export type { LoginFormData, SignupFormData, AuthResponse };
+export default authService
+export type { LoginFormData, SignupFormData, AuthResponse }

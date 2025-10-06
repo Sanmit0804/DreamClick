@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const ensureAuthenticated = (req, res, next) => {
+    console.log("logged in user--", req.user);
     const auth = req.headers['authorization'];
     if (!auth) {
         return res.status(401).json({ error: 'Unauthorized, JWT token is missing' });

@@ -19,6 +19,7 @@ import authService from "@/services/auth"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import useDeviceType from "@/hooks/useDeviceType"
+import { useNavigate } from "react-router-dom"
 
 // ✅ Define Zod schemas for validation
 const loginSchema = z.object({
@@ -44,6 +45,7 @@ export default function Auth() {
     const [isLoginScreen, setIsLoginScreen] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const currentDevice = useDeviceType();
+    const navigate = useNavigate();
 
     // Login form
     const {
@@ -67,31 +69,18 @@ export default function Auth() {
 
     const onLoginSubmit = async (data: LoginFormData) => {
         setIsLoading(true);
-        console.log("Login form submitted:", data)
-
         try {
             const response = await authService.login(data);
+            localStorage.setItem('authToken', response.token);
+
             toast.success("Login successful!");
-            console.log("Login response:", response);
-
-            // Handle successful login (redirect, store user data, etc.)
-            // Example: router.push('/dashboard');
-
-        } catch (error: any) {
-            console.error("Login error:", error);
-
-            // Handle different error types
-            if (error.response?.data?.message) {
-                toast.error(error.response.data.message);
-            } else if (error.message) {
-                toast.error(error.message);
-            } else {
-                toast.error("Login failed. Please try again.");
-            }
+            navigate("/dashboard");
+        } catch (error) {
+            console.log(error);
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const onSignupSubmit = async (data: SignupFormData) => {
         setIsLoading(true);
@@ -102,10 +91,9 @@ export default function Auth() {
             toast.success("Account created successfully!");
             console.log("Signup response:", response);
 
-            // Optionally switch to login screen after successful signup
             setIsLoginScreen(true);
             signupReset();
-            toast.info("Please login with your new credentials");
+            // toast.info("Please login with your new credentials");
 
         } catch (error: any) {
             console.error("Signup error:", error);
@@ -116,7 +104,6 @@ export default function Auth() {
             } else if (error.message) {
                 toast.error(error.message);
             } else if (error.errors) {
-                // Handle Zod validation errors from service
                 toast.error("Please check your input and try again.");
             } else {
                 toast.error("Signup failed. Please try again.");
@@ -135,7 +122,7 @@ export default function Auth() {
     return (
         <div className="flex h-screen bg-white dark:bg-black">
             {/* Left Image Section */}
-            {currentDevice !== 'mobile' && (
+            {currentDevice == 'laptop' && (
                 <div className="w-1/2 h-full relative overflow-hidden floating-astronaut">
                     <img
                         src="./astronaut_copy.png"
@@ -146,7 +133,7 @@ export default function Auth() {
             )}
 
             {/* Right Auth Form */}
-            <div className={`relative h-full flex items-center justify-center ${currentDevice !== 'mobile' ? 'w-1/2' : 'w-full'}`}>
+            <div className={`relative h-full flex items-center justify-center ${currentDevice == 'laptop' ? 'w-1/2' : 'w-full'}`}>
                 <div className="absolute top-4 right-4">
                     <ModeToggle />
                 </div>

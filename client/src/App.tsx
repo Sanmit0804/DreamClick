@@ -1,12 +1,16 @@
-import { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import LoadingSpinner from './components/LoadingSpinner';
+import Dashboard from './pages/Dashboard';
+import { Toaster } from 'sonner';
 
 // Lazy load pages
 const Login = lazy(() => import('./pages/login'));
-// Protected route component for specific actions
+
+// Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
   const isAuthenticated = !!localStorage.getItem('authToken'); // Your auth logic
   
   return isAuthenticated ? (
@@ -16,10 +20,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Admin route component
+// Admin route wrapper
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = !!localStorage.getItem('authToken');
-  const isAdmin = localStorage.getItem('userRole') === 'admin'; // Your admin check logic
+  const isAdmin = localStorage.getItem('userRole') === 'admin';
   
   return isAuthenticated && isAdmin ? (
     <>{children}</>
@@ -31,19 +35,24 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
+      {/* ✅ Use BrowserRouter here */}
+      <BrowserRouter>
         <Suspense fallback={<LoadingSpinner />}>
-          <Routes>            
+          <Routes>
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />
-            
-            {/* 404 page */}
+
+            {/* Example protected route */}
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+
+            {/* 404 page (optional) */}
             {/* <Route path="*" element={<NotFound />} /> */}
           </Routes>
         </Suspense>
-      </Router>
+      </BrowserRouter>
+      <Toaster />
     </ThemeProvider>
   );
 }
 
-export default App
+export default App;
