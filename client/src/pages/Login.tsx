@@ -72,11 +72,13 @@ export default function Auth() {
         try {
             const response = await authService.login(data);
             localStorage.setItem('authToken', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
 
             toast.success("Login successful!");
             navigate("/dashboard");
         } catch (error) {
-            console.log(error);
+            console.error("Login error:", error);
+            toast.error("Login failed. Please check your credentials and try again.");
         } finally {
             setIsLoading(false);
         }

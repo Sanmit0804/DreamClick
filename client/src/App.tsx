@@ -1,52 +1,60 @@
-import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+// App.tsx
+import { Suspense, lazy } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
-import LoadingSpinner from './components/LoadingSpinner';
-import Dashboard from './pages/Dashboard';
-import { Toaster } from 'sonner';
+import LoadingSpinner from "./components/LoadingSpinner";
+import { Toaster } from "sonner";
+import RootLayout from "./components/Layouts/RootLayout";
+import AuthLayout from "./components/layouts/AuthLayout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import NotFound from "./pages/NotFound";
 
-// Lazy load pages
-const Login = lazy(() => import('./pages/login'));
-
-// Protected route wrapper
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  const isAuthenticated = !!localStorage.getItem('authToken'); // Your auth logic
-  
-  return isAuthenticated ? (
-    <>{children}</>
-  ) : (
-    <Navigate to="/login" replace state={{ from: location.pathname }} />
-  );
-};
-
-// Admin route wrapper
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = !!localStorage.getItem('authToken');
-  const isAdmin = localStorage.getItem('userRole') === 'admin';
-  
-  return isAuthenticated && isAdmin ? (
-    <>{children}</>
-  ) : (
-    <Navigate to="/dashboard" replace />
-  );
-};
+// Lazy load pages with proper error boundaries
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Images = lazy(() => import("./pages/Images"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      {/* ✅ Use BrowserRouter here */}
       <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense
+          fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <LoadingSpinner />
+            </div>
+          }
+        >
           <Routes>
-            {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
+            {/* Public Auth Routes - No Navbar */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Example protected route */}
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            {/* Protected Routes - With Navbar */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <RootLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/images" element={<Images />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
 
-            {/* 404 page (optional) */}
-            {/* <Route path="*" element={<NotFound />} /> */}
+            {/* Redirect root to dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </BrowserRouter>
