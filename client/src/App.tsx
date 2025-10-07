@@ -10,7 +10,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { Toaster } from "sonner";
 import RootLayout from "./components/Layouts/RootLayout";
-import AuthLayout from "./components/layouts/AuthLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
