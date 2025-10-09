@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path'); // ✅ for serving frontend files
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
+const uploadRoute = require('./routes/upload.route');
 const ensureAuthenticated = require('./middlewares/Auth');
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.options('*', cors()); // enable pre-flight for all routes
 app.get("/ping", (req, res) => res.send("PONGG"));
 app.use('/auth', authRoute);
 app.use('/api', ensureAuthenticated, userRoute);
+app.use('/upload', uploadRoute);
 
 // ✅ Serve frontend (for BrowserRouter)
 const __dirnamePath = path.resolve(); // because __dirname may not be defined in ES modules
