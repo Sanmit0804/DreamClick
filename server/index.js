@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path'); // ✅ for serving frontend files
+const path = require('path'); 
 const authRoute = require('./routes/auth.route');
 const userRoute = require('./routes/user.route');
 const uploadRoute = require('./routes/upload.route');
@@ -13,18 +13,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Connect MongoDB
 connectDB();
 
-// ✅ Middleware
 app.use(bodyParser.json());
 app.use(cors());
-app.options('*', cors()); // enable pre-flight for all routes
+app.options('*', cors());
 
-// ✅ Routes
 app.get("/ping", (req, res) => res.send("PONGG"));
 app.use('/auth', authRoute);
-app.use('/api', ensureAuthenticated, userRoute);
+app.use('/api', userRoute);
 app.use('/upload', uploadRoute);
 
 // ✅ Serve frontend (for BrowserRouter)
@@ -38,5 +35,4 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// ✅ Start server
 app.listen(PORT, () => console.log(`🛜  Server is running on PORT: ${PORT}`));
