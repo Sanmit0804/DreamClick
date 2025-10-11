@@ -67,7 +67,7 @@ const Navbar = () => {
 
       {/* Desktop Right Side Items */}
       <div className="hidden md:flex items-center gap-4 absolute right-8">
-        <span className="px-4 py-1 rounded-full bg-foreground/10 text-foreground font-medium text-sm">
+        <span className="cursor-pointer px-4 py-1 rounded-full bg-foreground/10 text-foreground font-medium text-sm" onClick={() => navigate('/admin')}>
           {currentUser.name || "Guest"}
         </span>
 
@@ -106,7 +106,7 @@ const Navbar = () => {
             </Link>
           ))}
 
-          <span className="px-4 py-1 rounded-full bg-foreground/10 text-foreground font-medium text-sm text-center">
+          <span className="cursor-pointer px-4 py-1 rounded-full bg-foreground/10 text-foreground font-medium text-sm text-center">
             {currentUser.name || "Guest"}
           </span>
 
