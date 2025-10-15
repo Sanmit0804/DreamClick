@@ -1,41 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { Trash2 } from 'lucide-react';
+import RenderTable from '@/components/RenderTable';
+import GenericTooltip from '@/components/GenericTooltip';
+import userService from '@/services/user.service';
+import { toast } from 'sonner';
 import {
-    createColumnHelper,
-    flexRender,
-    getCoreRowModel,
-    getPaginationRowModel,
-    useReactTable,
-} from '@tanstack/react-table';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // Define the User type
 type User = {
-    id: string;
+    _id: string;
     name: string;
     email: string;
     role: 'admin' | 'user' | 'moderator';
@@ -44,177 +27,83 @@ type User = {
 };
 
 const Admin = () => {
-    // Sample user data - replace with your actual data source
-    const [data, setData] = useState<User[]>([
-        {
-            id: '1',
-            name: 'John Doe',
-            email: 'john@example.com',
-            role: 'admin',
-            status: 'active',
-            createdAt: '2023-01-15',
-        },
-        {
-            id: '2',
-            name: 'Jane Smith',
-            email: 'jane@example.com',
-            role: 'user',
-            status: 'active',
-            createdAt: '2023-02-20',
-        },
-        {
-            id: '3',
-            name: 'Bob Johnson',
-            email: 'bob@example.com',
-            role: 'moderator',
-            status: 'pending',
-            createdAt: '2023-03-10',
-        },
-        {
-            id: '4',
-            name: 'Alice Brown',
-            email: 'alice@example.com',
-            role: 'user',
-            status: 'inactive',
-            createdAt: '2023-04-05',
-        },
-        {
-            id: '5',
-            name: 'Charlie Wilson',
-            email: 'charlie@example.com',
-            role: 'admin',
-            status: 'active',
-            createdAt: '2023-05-12',
-        },
-        {
-            id: '6',
-            name: 'Diana Lee',
-            email: 'diana@example.com',
-            role: 'user',
-            status: 'active',
-            createdAt: '2023-06-18',
-        },
-        {
-            id: '7',
-            name: 'Edward Miller',
-            email: 'edward@example.com',
-            role: 'moderator',
-            status: 'pending',
-            createdAt: '2023-07-22',
-        },
-        {
-            id: '8',
-            name: 'Fiona Davis',
-            email: 'fiona@example.com',
-            role: 'user',
-            status: 'inactive',
-            createdAt: '2023-08-30',
-        },
-        {
-            id: '9',
-            name: 'George Thompson',
-            email: 'george@example.com',
-            role: 'admin',
-            status: 'active',
-            createdAt: '2023-09-05',
-        },
-        {
-            id: '10',
-            name: 'Hannah Clark',
-            email: 'hannah@example.com',
-            role: 'user',
-            status: 'active',
-            createdAt: '2023-10-15',
-        },
-        {
-            id: '11',
-            name: 'Ian Walker',
-            email: 'ian@example.com',
-            role: 'moderator',
-            status: 'pending',
-            createdAt: '2023-11-20',
-        },
-        {
-            id: '12',
-            name: 'Jessica Hall',
-            email: 'jessica@example.com',
-            role: 'user',
-            status: 'inactive',
-            createdAt: '2023-12-25',
-        },
-    ]);
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    const fetchUsers = async () => {
+        try {
+            setIsLoading(true);
+            const response = await userService.getUsers();
+            setData(response);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchUsers();
+    }, [])
 
     const columnHelper = createColumnHelper<User>();
 
     const columns = useMemo(
         () => [
-            columnHelper.accessor('id', {
-                header: 'ID',
-                cell: (info) => info.getValue(),
-            }),
             columnHelper.accessor('name', {
                 header: 'Name',
                 cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+                meta: {
+                    headerClassName: 'text-left pl-4',
+                    className: 'text-left font-semibold pl-4',
+                },
             }),
             columnHelper.accessor('email', {
                 header: 'Email',
                 cell: (info) => info.getValue(),
+                meta: {
+                    headerClassName: 'text-left',
+                },
             }),
             columnHelper.accessor('role', {
                 header: 'Role',
-                cell: (info) => (
-                    <Badge
-                        variant={
-                            info.getValue() === 'admin'
-                                ? 'destructive'
-                                : info.getValue() === 'moderator'
-                                    ? 'secondary'
-                                    : 'default'
-                        }
-                    >
-                        {info.getValue()}
-                    </Badge>
-                ),
-            }),
-            columnHelper.accessor('status', {
-                header: 'Status',
-                cell: (info) => (
-                    <Badge
-                        variant={
-                            info.getValue() === 'active'
-                                ? 'default'
-                                : info.getValue() === 'pending'
-                                    ? 'outline'
-                                    : 'secondary'
-                        }
-                    >
-                        {info.getValue()}
-                    </Badge>
-                ),
+                cell: (info) => info.getValue(),
+                meta: {
+                    headerClassName: 'text-center',
+                    className: 'text-center',
+                },
             }),
             columnHelper.accessor('createdAt', {
                 header: 'Created At',
                 cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+                meta: {
+                    headerClassName: 'text-right',
+                    className: 'text-right text-gray-500',
+                },
             }),
             columnHelper.display({
                 id: 'actions',
                 header: 'Actions',
+                meta: {
+                    headerClassName: 'text-center w-20',
+                    className: 'text-center w-20',
+                },
                 cell: ({ row }) => (
-                    <div className="flex space-x-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(row.original)}
+                    <div className="flex space-x-2 justify-center">
+                        <GenericTooltip
+                            content="Delete item"
+                            side='right'
                         >
-                            Edit
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(row.original.id)}
-                        >
-                            Delete
-                        </Button>
+                            <Trash2
+                                color="red"
+                                strokeWidth={1}
+                                cursor="pointer"
+                                onClick={() => openDeleteDialog(row.original._id, row.original.name)}
+                            />
+                        </GenericTooltip>
                     </div>
                 ),
             }),
@@ -222,63 +111,32 @@ const Admin = () => {
         [columnHelper]
     );
 
-    const table = useReactTable({
-        data,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        initialState: {
-            pagination: {
-                pageSize: 5,
-            },
-        },
-    });
-
-    const handleEdit = (user: User) => {
-        console.log('Edit user:', user);
-        // Implement edit functionality
+    const openDeleteDialog = (userId: string, userName: string) => {
+        setUserToDelete(userId);
+        setDeleteDialogOpen(true);
     };
 
-    const handleDelete = (userId: string) => {
-        console.log('Delete user:', userId);
-        // Implement delete functionality
-        setData(data.filter(user => user.id !== userId));
+    const handleDelete = async () => {
+        if (!userToDelete) return;
+
+        try {
+            setDeleteLoading(true);
+            await userService.deleteUserById(userToDelete);
+            toast.success("User deleted successfully");
+            fetchUsers();
+        } catch (error) {
+            console.log(error);
+            toast.error("Failed to delete user");
+        } finally {
+            setDeleteLoading(false);
+            setDeleteDialogOpen(false);
+            setUserToDelete(null);
+        }
     };
 
-    // Generate page numbers for pagination
-    const generatePageNumbers = () => {
-        const currentPage = table.getState().pagination.pageIndex;
-        const totalPages = table.getPageCount();
-        const pageNumbers = [];
-
-        // Always show first page
-        pageNumbers.push(1);
-
-        // Calculate range around current page
-        let startPage = Math.max(2, currentPage - 1);
-        let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-        // Add ellipsis after first page if needed
-        if (startPage > 2) {
-            pageNumbers.push('ellipsis-start');
-        }
-
-        // Add pages around current page
-        for (let i = startPage; i <= endPage; i++) {
-            pageNumbers.push(i);
-        }
-
-        // Add ellipsis before last page if needed
-        if (endPage < totalPages - 1) {
-            pageNumbers.push('ellipsis-end');
-        }
-
-        // Always show last page if there is more than one page
-        if (totalPages > 1) {
-            pageNumbers.push(totalPages);
-        }
-
-        return pageNumbers;
+    const handleCancelDelete = () => {
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
     };
 
     return (
@@ -288,142 +146,42 @@ const Admin = () => {
                 <p className="text-gray-600">Manage your users from here</p>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No users found.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            <RenderTable
+                columns={columns}
+                data={data}
+                pagination={true}
+                pageSize={10}
+                loading={isLoading}
+                emptyMessage="No users found."
+            />
 
-            {/* Pagination Controls */}
-            <div className="flex justify-between items-center py-4">
-                <div>
-                    <Pagination>
-                        <PaginationContent>
-                            <PaginationItem>
-                                <PaginationPrevious
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        table.previousPage();
-                                    }}
-                                    className={
-                                        !table.getCanPreviousPage()
-                                            ? 'pointer-events-none opacity-50'
-                                            : undefined
-                                    }
-                                />
-                            </PaginationItem>
-
-                            {generatePageNumbers().map((page, index) => {
-                                if (page === 'ellipsis-start' || page === 'ellipsis-end') {
-                                    return (
-                                        <PaginationItem key={`ellipsis-${index}`}>
-                                            <PaginationEllipsis />
-                                        </PaginationItem>
-                                    );
-                                }
-
-                                const pageNumber = page as number;
-                                const isCurrentPage = table.getState().pagination.pageIndex === pageNumber - 1;
-
-                                return (
-                                    <PaginationItem key={pageNumber}>
-                                        <PaginationLink
-                                            href="#"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                table.setPageIndex(pageNumber - 1);
-                                            }}
-                                            isActive={isCurrentPage}
-                                        >
-                                            {pageNumber}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                );
-                            })}
-
-                            <PaginationItem>
-                                <PaginationNext
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        table.nextPage();
-                                    }}
-                                    className={
-                                        !table.getCanNextPage()
-                                            ? 'pointer-events-none opacity-50'
-                                            : undefined
-                                    }
-                                />
-                            </PaginationItem>
-                        </PaginationContent>
-                    </Pagination>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium text-nowrap">Rows per page</p>
-                    <Select
-                        value={`${table.getState().pagination.pageSize}`}
-                        onValueChange={(value) => {
-                            table.setPageSize(Number(value));
-                        }}
-                    >
-                        <SelectTrigger className="h-8 w-[70px]">
-                            <SelectValue placeholder={table.getState().pagination.pageSize} />
-                        </SelectTrigger>
-                        <SelectContent side="top">
-                            {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                                <SelectItem key={pageSize} value={`${pageSize}`}>
-                                    {pageSize}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the user
+                            account and remove all associated data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel 
+                            onClick={handleCancelDelete}
+                            disabled={deleteLoading}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                            disabled={deleteLoading}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {deleteLoading ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

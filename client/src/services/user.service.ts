@@ -11,6 +11,15 @@ class UserService {
             throw error;
         }
     }
+
+    async deleteUserById(userId: string) {
+        try {
+            const response = await axios.delete(`${API_URL}/api/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default new UserService();
