@@ -5,6 +5,11 @@ class userService {
         const users = await User.find();
         return users;
     }
+
+    async deleteUserById(userId) {
+        const deletedUser = await User.findByIdAndDelete(userId);
+        return deletedUser;
+    }
 }
 
 module.exports = new userService();
