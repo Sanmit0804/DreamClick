@@ -5,16 +5,7 @@ import RenderTable from '@/components/RenderTable';
 import GenericTooltip from '@/components/GenericTooltip';
 import userService from '@/services/user.service';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import ConfirmationBox from '@/components/ConfirmationBox';
 
 // Define the User type
 type User = {
@@ -32,6 +23,7 @@ const Admin = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [userName, setUserName] = useState<string>('');
 
     const fetchUsers = async () => {
         try {
@@ -73,7 +65,7 @@ const Admin = () => {
                 cell: (info) => info.getValue(),
                 meta: {
                     headerClassName: 'text-center',
-                    className: 'text-center',
+                    className: 'text-center uppercase',
                 },
             }),
             columnHelper.accessor('createdAt', {
@@ -113,6 +105,7 @@ const Admin = () => {
 
     const openDeleteDialog = (userId: string, userName: string) => {
         setUserToDelete(userId);
+        setUserName(userName);
         setDeleteDialogOpen(true);
     };
 
@@ -131,12 +124,15 @@ const Admin = () => {
             setDeleteLoading(false);
             setDeleteDialogOpen(false);
             setUserToDelete(null);
+            setUserName('');
         }
     };
 
     const handleCancelDelete = () => {
         setDeleteDialogOpen(false);
         setUserToDelete(null);
+        setUserName('');
+        toast.info("Deletion cancelled");
     };
 
     return (
@@ -153,35 +149,23 @@ const Admin = () => {
                 pageSize={10}
                 loading={isLoading}
                 emptyMessage="No users found."
+                globalSearch
             />
 
-            {/* Delete Confirmation Dialog */}
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the user
-                            account and remove all associated data.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel 
-                            onClick={handleCancelDelete}
-                            disabled={deleteLoading}
-                        >
-                            Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            disabled={deleteLoading}
-                            className="bg-red-600 hover:bg-red-700 text-white"
-                        >
-                            {deleteLoading ? "Deleting..." : "Delete"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmationBox
+                isOpen={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                onConfirm={handleDelete}
+                onCancel={handleCancelDelete}
+                title="Delete User"
+                description={`Are you sure you want to delete "${userName}"? This action cannot be undone and will permanently delete the user account and all associated data.`}
+                confirmText="Delete User"
+                cancelText="Cancel"
+                confirmButtonVariant="destructive"
+                cancelButtonVariant="outline"
+                loading={deleteLoading}
+                loadingText="Deleting..."
+            />
         </div>
     );
 };

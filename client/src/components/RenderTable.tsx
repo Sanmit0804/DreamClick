@@ -4,6 +4,7 @@ import {
     flexRender,
     getCoreRowModel,
     getPaginationRowModel,
+    getFilteredRowModel,
     useReactTable,
     type ColumnDef,
 } from '@tanstack/react-table';
@@ -15,7 +16,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import {
     Pagination,
     PaginationContent,
@@ -33,6 +33,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 
 interface RenderTableProps<T> {
     columns: ColumnDef<T, any>[];
@@ -44,6 +45,8 @@ interface RenderTableProps<T> {
     emptyMessage?: string;
     loading?: boolean;
     loadingRows?: number;
+    globalSearch?: boolean;
+    searchPlaceholder?: string;
 }
 
 const RenderTable = <T,>({
@@ -56,11 +59,20 @@ const RenderTable = <T,>({
     emptyMessage = 'No data found.',
     loading = false,
     loadingRows = 5,
+    globalSearch = false,
+    searchPlaceholder = 'Search...',
 }: RenderTableProps<T>) => {
+    const [globalFilter, setGlobalFilter] = React.useState('');
+
     const table = useReactTable({
         data,
         columns,
+        state: {
+            globalFilter,
+        },
+        onGlobalFilterChange: setGlobalFilter,
         getCoreRowModel: getCoreRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: pagination ? getPaginationRowModel() : undefined,
         initialState: pagination ? {
             pagination: {
@@ -124,6 +136,18 @@ const RenderTable = <T,>({
 
     return (
         <div className={className}>
+            {/* Global Search Input */}
+            {globalSearch && (
+                <div className="mb-4">
+                    <Input
+                        placeholder={searchPlaceholder}
+                        value={globalFilter ?? ''}
+                        onChange={(event) => setGlobalFilter(event.target.value)}
+                        className="max-w-sm"
+                    />
+                </div>
+            )}
+
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
@@ -188,7 +212,7 @@ const RenderTable = <T,>({
                                     colSpan={columns.length}
                                     className="h-24 text-center"
                                 >
-                                    {emptyMessage}
+                                    {globalFilter ? 'No results found for your search.' : emptyMessage}
                                 </TableCell>
                             </TableRow>
                         )}
