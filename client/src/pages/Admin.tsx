@@ -6,6 +6,8 @@ import GenericTooltip from '@/components/GenericTooltip';
 import userService from '@/services/user.service';
 import { toast } from 'sonner';
 import ConfirmationBox from '@/components/ConfirmationBox';
+import { format } from 'date-fns';
+import config from '@/config/config';
 
 // Define the User type
 type User = {
@@ -70,7 +72,10 @@ const Admin = () => {
             }),
             columnHelper.accessor('createdAt', {
                 header: 'Created At',
-                cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+                cell: (info) => {
+                    const value = info.getValue();
+                    return value ? format(new Date(value), config.DATE_FORMAT) : 'N/A';
+                },
                 meta: {
                     headerClassName: 'text-right',
                     className: 'text-right text-gray-500',
