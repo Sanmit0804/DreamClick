@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import RootLayout from './components/Layouts/RootLayout';
 import NotFound from './pages/NotFound';
@@ -11,40 +11,40 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Images = lazy(() => import("./pages/Images"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
-const Admin = lazy(() => import('./pages/Admin'));
+const Admin = lazy(() => import('./pages/Admin/Admin'));
 
 const publicRoutes = [
     {
         path: '/login',
-        element: <Login />
-    }
-]
+        element: <Login />,
+    },
+];
 
 const protectedRoutes = [
     {
         path: '/dashboard',
-        element: <Dashboard />
+        element: <Dashboard />,
     },
     {
         path: '/images',
-        element: <Images />
+        element: <Images />,
     },
     {
         path: '/profile',
-        element: <Profile />
+        element: <Profile />,
     },
     {
         path: '/settings',
-        element: <Settings />
+        element: <Settings />,
     },
-]
+];
 
 const adminRoutes = [
     {
-        path: '/admin',
-        element: <Admin />
-    }
-]
+        path: '/admin/*', // Use wildcard to allow Admin to handle its own sub-routes
+        element: <Admin />,
+    },
+];
 
 export const AppRoutes = () => {
     return (
@@ -87,10 +87,9 @@ export const AppRoutes = () => {
                     ))}
                 </Route>
 
-
                 <Route path="/" element={<Navigate to={'/dashboard'} replace />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
         </Suspense>
-    )
-}
+    );
+};

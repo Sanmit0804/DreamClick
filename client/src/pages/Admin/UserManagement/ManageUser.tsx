@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Trash2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import RenderTable from '@/components/RenderTable';
 import GenericTooltip from '@/components/GenericTooltip';
 import userService from '@/services/user.service';
@@ -19,29 +20,39 @@ type User = {
     createdAt: string;
 };
 
-const Admin = () => {
-    const [data, setData] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<string | null>(null);
-    const [deleteLoading, setDeleteLoading] = useState(false);
-    const [userName, setUserName] = useState<string>('');
+const ManageUser = () => {
+    const queryClient = useQueryClient();
+    const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+    const [userToDelete, setUserToDelete] = React.useState<string | null>(null);
+    const [userName, setUserName] = React.useState<string>('');
 
-    const fetchUsers = async () => {
-        try {
-            setIsLoading(true);
-            const response = await userService.getUsers();
-            setData(response);
-        } catch (error) {
+    // Fetch users with React Query
+    const {
+        data: users = [],
+        isLoading,
+    } = useQuery({
+        queryKey: ['users'],
+        queryFn: () => userService.getUsers(),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Delete user mutation
+    const deleteMutation = useMutation({
+        mutationFn: (userId: string) => userService.deleteUserById(userId),
+        onSuccess: () => {
+            toast.success("User deleted successfully");
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+        },
+        onError: (error) => {
             console.log(error);
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchUsers();
-    }, [])
+            toast.error("Failed to delete user");
+        },
+        onSettled: () => {
+            setDeleteDialogOpen(false);
+            setUserToDelete(null);
+            setUserName('');
+        },
+    });
 
     const columnHelper = createColumnHelper<User>();
 
@@ -90,10 +101,7 @@ const Admin = () => {
                 },
                 cell: ({ row }) => (
                     <div className="flex space-x-2 justify-center">
-                        <GenericTooltip
-                            content="Delete item"
-                            side='right'
-                        >
+                        <GenericTooltip content="Delete item" side="right">
                             <Trash2
                                 color="red"
                                 strokeWidth={1}
@@ -116,21 +124,7 @@ const Admin = () => {
 
     const handleDelete = async () => {
         if (!userToDelete) return;
-
-        try {
-            setDeleteLoading(true);
-            await userService.deleteUserById(userToDelete);
-            toast.success("User deleted successfully");
-            fetchUsers();
-        } catch (error) {
-            console.log(error);
-            toast.error("Failed to delete user");
-        } finally {
-            setDeleteLoading(false);
-            setDeleteDialogOpen(false);
-            setUserToDelete(null);
-            setUserName('');
-        }
+        deleteMutation.mutate(userToDelete);
     };
 
     const handleCancelDelete = () => {
@@ -141,15 +135,15 @@ const Admin = () => {
     };
 
     return (
-        <div className="p-6">
+        <>
             <div className="mb-6">
-                <h1 className="text-2xl font-bold">Welcome to Admin Panel</h1>
+                <h1 className="text-2xl font-bold">User Management</h1> 
                 <p className="text-gray-600">Manage your users from here</p>
             </div>
 
             <RenderTable
                 columns={columns}
-                data={data}
+                data={users}
                 pagination={true}
                 pageSize={10}
                 loading={isLoading}
@@ -168,11 +162,11 @@ const Admin = () => {
                 cancelText="Cancel"
                 confirmButtonVariant="destructive"
                 cancelButtonVariant="outline"
-                loading={deleteLoading}
+                loading={deleteMutation.isPending}
                 loadingText="Deleting..."
             />
-        </div>
+        </>
     );
 };
 
-export default Admin;
+export default ManageUser;
