@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
     Menubar,
     MenubarContent,
@@ -8,6 +8,14 @@ import {
     MenubarSeparator,
     MenubarTrigger,
 } from "@/components/ui/menubar";
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
     BarChart3,
     Settings,
@@ -21,6 +29,8 @@ import {
     Edit,
 } from 'lucide-react';
 import ManageUser from './UserManagement/ManageUser';
+import useDeviceType from '@/hooks/useDeviceType';
+import EditUser from './UserManagement/EditUser';
 
 // Types for our menu structure
 interface MenuItem {
@@ -41,6 +51,7 @@ interface SubMenuItem {
 const Admin = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const deviceType = useDeviceType();
 
     // Dynamic menu configuration
     const menuItems: MenuItem[] = [
@@ -95,8 +106,8 @@ const Admin = () => {
             icon: Settings,
             label: 'Settings',
             subItems: [
+                { id: 'user-management', label: 'User Management', path: '/admin/users', icon: Users },
                 { id: 'general-settings', label: 'General Settings', path: '/admin/settings/general', icon: Settings },
-                { id: 'user-management', label: 'User Management', path: '/admin/settings/users', icon: Users },
                 { id: 'payment-settings', label: 'Payment Settings', path: '/admin/settings/payment', icon: ShoppingCart },
             ],
         },
@@ -121,14 +132,63 @@ const Admin = () => {
         return false;
     };
 
+    // Generate breadcrumb items based on current path
+    const generateBreadcrumbs = () => {
+        const pathSegments = location.pathname.split('/').filter(segment => segment);
+        // Remove 'admin' from the beginning since we're already in admin context
+        const adminSegments = pathSegments.slice(1);
+        const breadcrumbs = [
+            {
+                label: 'Dashboard',
+                href: '/admin',
+                isCurrent: location.pathname === '/admin'
+            }
+        ];
+        let currentPath = '/admin';
+
+        adminSegments.forEach((segment, index) => {
+            currentPath += `/${segment}`;
+            const isLast = index === adminSegments.length - 1;
+            let label = segment.charAt(0).toUpperCase() + segment.slice(1);
+
+            // Handle the /users/edit/:id route specifically
+            if (currentPath.match(/^\/admin\/users\/[^/]+$/)) {
+                label = 'User Detail';
+            } else {
+                // Try to find a better label from our menu configuration
+                menuItems.forEach(item => {
+                    if (item.path === currentPath) {
+                        label = item.label;
+                    } else if (item.subItems) {
+                        const subItem = item.subItems.find(sub => sub.path === currentPath);
+                        if (subItem) {
+                            label = subItem.label;
+                        }
+                    }
+                });
+            }
+
+            breadcrumbs.push({
+                label,
+                href: currentPath,
+                isCurrent: isLast
+            });
+        });
+        return breadcrumbs;
+    };
+
+    const breadcrumbItems = generateBreadcrumbs();
+
     return (
-        <div className="flex h-screen">
+        <div className="flex">
             {/* Vertical Menubar Sidebar */}
             <div className="w-64 bg-background border-r">
                 <Menubar className="flex-col h-full items-stretch border-none">
                     {/* Logo/Header */}
                     <div className="p-4 border-b">
-                        <h2 className="text-lg font-semibold">Admin Panel</h2>
+                        <h2 className="text-lg font-semibold">
+                            {deviceType !== 'mobile' ? 'Admin Panel' : null}
+                        </h2>
                     </div>
 
                     {/* Menu Items */}
@@ -136,19 +196,27 @@ const Admin = () => {
                         {menuItems.map((item) => (
                             <MenubarMenu key={item.id}>
                                 <MenubarTrigger
-                                    className={`w-full justify-between data-[state=open]:bg-accent data-[state=open]:text-accent-foreground ${isMenuItemActive(item) ? 'bg-accent text-accent-foreground' : ''
+                                    className={`w-full mt-3 justify-between data-[state=open]:bg-accent data-[state=open]:text-accent-foreground ${isMenuItemActive(item)
+                                        ? 'bg-accent text-accent-foreground'
+                                        : ''
                                         }`}
                                     onClick={() => handleMenuItemClick(item)}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <item.icon className="h-4 w-4" />
-                                        {item.label}
+                                        <item.icon className="h-5 w-5" />
+                                        {deviceType !== 'mobile' && <span>{item.label}</span>}
                                     </div>
-                                    {item.subItems && <ChevronRight className="h-4 w-4" />}
+                                    {item.subItems && deviceType !== 'mobile' && (
+                                        <ChevronRight className="h-4 w-4" />
+                                    )}
                                 </MenubarTrigger>
 
                                 {item.subItems && (
-                                    <MenubarContent side="right" align="start" className="w-56">
+                                    <MenubarContent
+                                        side="right"
+                                        align="start"
+                                        className={`w-${deviceType === 'mobile' ? '36' : '56'}`}
+                                    >
                                         {item.subItems.map((subItem, index) => (
                                             <React.Fragment key={subItem.id}>
                                                 <MenubarItem
@@ -157,7 +225,7 @@ const Admin = () => {
                                                         }`}
                                                 >
                                                     {subItem.icon && <subItem.icon className="h-4 w-4" />}
-                                                    {subItem.label}
+                                                    {deviceType !== 'mobile' && <span>{subItem.label}</span>}
                                                 </MenubarItem>
                                                 {index < item.subItems!.length - 1 && <MenubarSeparator />}
                                             </React.Fragment>
@@ -171,31 +239,56 @@ const Admin = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 p-8">
-                <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/orders" element={<OrdersList />} />
-                    <Route path="/orders/create" element={<CreateOrder />} />
-                    <Route path="/orders/pending" element={<PendingOrders />} />
-                    <Route path="/products" element={<ProductsList />} />
-                    <Route path="/products/create" element={<CreateProduct />} />
-                    <Route path="/products/categories" element={<ProductCategories />} />
-                    <Route path="/customers" element={<CustomersList />} />
-                    <Route path="/customers/create" element={<CreateCustomer />} />
-                    <Route path="/customers/groups" element={<CustomerGroups />} />
-                    <Route path="/analytics/sales" element={<SalesAnalytics />} />
-                    <Route path="/analytics/customers" element={<CustomerAnalytics />} />
-                    <Route path="/analytics/products" element={<ProductAnalytics />} />
-                    <Route path="/settings/general" element={<GeneralSettings />} />
-                    <Route path="/settings/users" element={<ManageUser />} />
-                    <Route path="/settings/payment" element={<PaymentSettings />} />
-                </Routes>
+            <div className="flex-1 flex flex-col">
+                {/* Breadcrumb Navigation */}
+                <div className="p-6 pb-2">
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            {breadcrumbItems.map((item, index) => (
+                                <React.Fragment key={item.href}>
+                                    <BreadcrumbItem>
+                                        {item.isCurrent ? (
+                                            <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                                        ) : (
+                                            <BreadcrumbLink asChild>
+                                                <Link to={item.href}>{item.label}</Link>
+                                            </BreadcrumbLink>
+                                        )}
+                                    </BreadcrumbItem>
+                                    {index < breadcrumbItems.length - 1 && <BreadcrumbSeparator />}
+                                </React.Fragment>
+                            ))}
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                </div>
+
+                {/* Page Content */}
+                <div className="flex-1 p-6 pt-2">
+                    <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/orders" element={<OrdersList />} />
+                        <Route path="/orders/create" element={<CreateOrder />} />
+                        <Route path="/orders/pending" element={<PendingOrders />} />
+                        <Route path="/products" element={<ProductsList />} />
+                        <Route path="/products/create" element={<CreateProduct />} />
+                        <Route path="/products/categories" element={<ProductCategories />} />
+                        <Route path="/customers" element={<CustomersList />} />
+                        <Route path="/customers/create" element={<CreateCustomer />} />
+                        <Route path="/customers/groups" element={<CustomerGroups />} />
+                        <Route path="/analytics/sales" element={<SalesAnalytics />} />
+                        <Route path="/analytics/customers" element={<CustomerAnalytics />} />
+                        <Route path="/analytics/products" element={<ProductAnalytics />} />
+                        <Route path="/settings/general" element={<GeneralSettings />} />
+                        <Route path="/users" element={<ManageUser />} />
+                        <Route path="/users/:id" element={<EditUser />} />
+                    </Routes>
+                </div>
             </div>
         </div>
     );
 };
 
-// Example page components
+// Example page components (unchanged)
 const Dashboard = () => (
     <div>
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>

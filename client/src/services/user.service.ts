@@ -12,6 +12,24 @@ class UserService {
         }
     }
 
+    async getUserById(userId: string) {
+        try {
+            const response = await axios.get(`${API_URL}/api/users/${userId}`);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateUser(id: string, data: any) {
+        try {
+            const response = await axios.patch(`${API_URL}/api/users/${id}`, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async deleteUserById(userId: string) {
         try {
             const response = await axios.delete(`${API_URL}/api/users/${userId}`);

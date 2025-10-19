@@ -5,6 +5,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import RootLayout from './components/Layouts/RootLayout';
 import NotFound from './pages/NotFound';
+import EditUser from './pages/Admin/UserManagement/EditUser';
 
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -40,6 +41,7 @@ const protectedRoutes = [
 ];
 
 const adminRoutes = [
+    // go to Admin page to add more routes of admin
     {
         path: '/admin/*', // Use wildcard to allow Admin to handle its own sub-routes
         element: <Admin />,
