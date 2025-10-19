@@ -16,6 +16,12 @@ class userController {
         res.status(200).json(user);
     });
 
+    static createUser = catchAsync(async (req, res) => {
+        const userData = req.body;
+        const newUser = await userService.createUser(userData);
+        res.status(201).json(newUser);
+    })
+
     static updateUser = catchAsync(async (req, res) => {
         const userId = req.params.id;
         const updateData = req.body;

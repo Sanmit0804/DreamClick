@@ -9,6 +9,11 @@ class userService {
         return await User.findById(userId);
     }
 
+    async createUser(data) {
+        const newUser = new User(data);
+        return await newUser.save();
+    }
+
     async updateUser(userId, data) {
         return await User.findByIdAndUpdate(userId, data, { new: true, runValidators: true });
     }

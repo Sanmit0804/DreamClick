@@ -47,6 +47,7 @@ interface RenderTableProps<T> {
     loadingRows?: number;
     globalSearch?: boolean;
     searchPlaceholder?: string;
+    extraButtons?: React.ReactNode;
 }
 
 const RenderTable = <T,>({
@@ -61,6 +62,7 @@ const RenderTable = <T,>({
     loadingRows = 5,
     globalSearch = false,
     searchPlaceholder = 'Search...',
+    extraButtons
 }: RenderTableProps<T>) => {
     const [globalFilter, setGlobalFilter] = React.useState('');
 
@@ -138,15 +140,21 @@ const RenderTable = <T,>({
         <div className={className}>
             {/* Global Search Input */}
             {globalSearch && (
-                <div className="mb-4">
+                <div className="flex justify-between mb-4">
                     <Input
                         placeholder={searchPlaceholder}
                         value={globalFilter ?? ''}
                         onChange={(event) => setGlobalFilter(event.target.value)}
                         className="max-w-sm"
                     />
+                    {extraButtons && (
+                        <div className="flex space-x-2">
+                            {extraButtons}
+                        </div>
+                    )}
                 </div>
             )}
+
 
             <div className="rounded-md border">
                 <Table>

@@ -5,7 +5,7 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import RootLayout from './components/Layouts/RootLayout';
 import NotFound from './pages/NotFound';
-import EditUser from './pages/Admin/UserManagement/EditUser';
+import EditUser from './pages/Admin/UserManagement/SingleUser';
 
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));

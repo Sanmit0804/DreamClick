@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import ManageUser from './UserManagement/ManageUser';
 import useDeviceType from '@/hooks/useDeviceType';
-import EditUser from './UserManagement/EditUser';
+import EditUser from './UserManagement/SingleUser';
 
 // Types for our menu structure
 interface MenuItem {

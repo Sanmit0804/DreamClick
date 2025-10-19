@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
-import { PencilLine, Trash2 } from 'lucide-react';
+import { Eye, PencilLine, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import RenderTable from '@/components/RenderTable';
 import GenericTooltip from '@/components/GenericTooltip';
@@ -10,6 +10,7 @@ import ConfirmationBox from '@/components/ConfirmationBox';
 import { format, startOfMonth, isAfter } from 'date-fns';
 import config from '@/config/config';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 // Define the User type
 type User = {
@@ -138,7 +139,15 @@ const ManageUser = () => {
                                 size={20}
                                 strokeWidth={1}
                                 cursor="pointer"
-                                onClick={() => navigate(`/admin/users/${row.original._id}`, { state: { mode: 'edit' } })}
+                                onClick={() => navigate(`/admin/users/${row.original._id}?mode=edit`)}
+                            />
+                        </GenericTooltip>
+                        <GenericTooltip content="View User">
+                            <Eye
+                                size={20}
+                                strokeWidth={1}
+                                cursor="pointer"
+                                onClick={() => navigate(`/admin/users/${row.original._id}?mode=view`)}
                             />
                         </GenericTooltip>
                         <GenericTooltip content="Delete item" >
@@ -222,6 +231,11 @@ const ManageUser = () => {
                 loading={isLoading}
                 emptyMessage="No users found."
                 globalSearch
+                extraButtons={
+                    <Button variant="default" onClick={() => navigate('/admin/users/new?mode=new')}>
+                        Create New User
+                    </Button>
+                }
             />
 
             <ConfirmationBox

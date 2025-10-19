@@ -30,6 +30,15 @@ class UserService {
         }
     }
 
+    async createUser(data: any) {
+        try {
+            const response = await axios.post(`${API_URL}/api/users`, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async deleteUserById(userId: string) {
         try {
             const response = await axios.delete(`${API_URL}/api/users/${userId}`);
