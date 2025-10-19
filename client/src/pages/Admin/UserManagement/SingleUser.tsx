@@ -323,20 +323,17 @@ const SingleUser = () => {
                 return {
                     title: 'Create New User',
                     description: 'Add a new user to the system',
-                    // icon: null,
                 };
             case 'edit':
                 return {
                     title: 'Edit User',
                     description: 'Update user information and preferences',
-                    // icon: <Edit className="w-5 h-5" />,
                 };
             case 'view':
             default:
                 return {
                     title: 'User Details',
                     description: 'View user information',
-                    // icon: <Eye className="w-5 h-5" />,
                 };
         }
     };
@@ -356,7 +353,6 @@ const SingleUser = () => {
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                     <div className="flex items-center gap-3">
-                        {modeConfig.icon}
                         <div>
                             <h1 className="text-3xl font-bold tracking-tight">
                                 {modeConfig.title}
