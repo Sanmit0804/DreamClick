@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import UploadedPage from "./UploadedPage";
 
 const Images = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -83,6 +84,7 @@ const Images = () => {
           </a>
         </div>
       )}
+      <UploadedPage />
     </div>
   );
 };
