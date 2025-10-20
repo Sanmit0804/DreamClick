@@ -1,11 +1,10 @@
 import { lazy, Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import RootLayout from './components/Layouts/RootLayout';
 import NotFound from './pages/NotFound';
-import EditUser from './pages/Admin/UserManagement/SingleUser';
 
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -21,7 +20,8 @@ const publicRoutes = [
     },
 ];
 
-const protectedRoutes = [
+// Routes accessible to everyone (with or without login)
+const openRoutes = [
     {
         path: '/dashboard',
         element: <Dashboard />,
@@ -30,6 +30,10 @@ const protectedRoutes = [
         path: '/images',
         element: <Images />,
     },
+];
+
+// Routes that require authentication
+const protectedRoutes = [
     {
         path: '/profile',
         element: <Profile />,
@@ -37,14 +41,6 @@ const protectedRoutes = [
     {
         path: '/settings',
         element: <Settings />,
-    },
-];
-
-const adminRoutes = [
-    // go to Admin page to add more routes of admin
-    {
-        path: '/admin/*', // Use wildcard to allow Admin to handle its own sub-routes
-        element: <Admin />,
     },
 ];
 
@@ -58,35 +54,39 @@ export const AppRoutes = () => {
             }
         >
             <Routes>
-                {/* Public Routes */}
+                {/* Public Routes (no navbar) */}
                 {publicRoutes.map((route) => (
                     <Route key={route.path} path={route.path} element={route.element} />
                 ))}
 
-                {/* Protected Routes */}
-                <Route
-                    element={
-                        <ProtectedRoute>
-                            <RootLayout />
-                        </ProtectedRoute>
-                    }
-                >
-                    {protectedRoutes.map((route) => (
+                {/* Open Routes (with navbar, no login required) */}
+                <Route element={<RootLayout />}>
+                    {openRoutes.map((route) => (
                         <Route key={route.path} path={route.path} element={route.element} />
                     ))}
 
-                    {/* Admin Routes - Protected by both authentication and role */}
-                    {adminRoutes.map((route) => (
-                        <Route
-                            key={route.path}
-                            path={route.path}
-                            element={
-                                <AdminRoute>
-                                    {route.element}
-                                </AdminRoute>
-                            }
-                        />
-                    ))}
+                    {/* Protected Routes (require login) */}
+                    <Route
+                        element={
+                            <ProtectedRoute>
+                                <Outlet />
+                            </ProtectedRoute>
+                        }
+                    >
+                        {protectedRoutes.map((route) => (
+                            <Route key={route.path} path={route.path} element={route.element} />
+                        ))}
+                    </Route>
+
+                    {/* Admin Routes (require admin role) */}
+                    <Route
+                        path="/admin/*"
+                        element={
+                            <AdminRoute>
+                                <Admin />
+                            </AdminRoute>
+                        }
+                    />
                 </Route>
 
                 <Route path="/" element={<Navigate to={'/dashboard'} replace />} />

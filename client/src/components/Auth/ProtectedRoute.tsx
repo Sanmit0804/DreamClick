@@ -1,6 +1,7 @@
-// components/auth/ProtectedRoute.tsx
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+// components/auth/ProtectedRoute.tsx (Simplified version)
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import ConfirmationBox from '@/components/ConfirmationBox';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,15 +13,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallbackPath = '/login' 
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
   
-  // More robust authentication check
   const isAuthenticated = (): boolean => {
     const token = localStorage.getItem('authToken');
     if (!token) return false;
     
-    // Optional: Add token expiration check
     try {
-      // Example: Check if token is valid/not expired
       const tokenData = JSON.parse(atob(token.split('.')[1]));
       return tokenData.exp > Date.now() / 1000;
     } catch {
@@ -28,16 +28,34 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      setShowLoginAlert(true);
+    }
+  }, []);
+
+  const handleLoginRedirect = () => {
+    localStorage.setItem('redirectPath', location.pathname);
+    navigate(fallbackPath, { replace: true });
+  };
+
   if (!isAuthenticated()) {
     return (
-      <Navigate 
-        to={fallbackPath} 
-        replace 
-        state={{ 
-          from: location.pathname,
-          message: 'Please log in to access this page'
-        }} 
-      />
+      <>
+        <ConfirmationBox
+          isOpen={showLoginAlert}
+          onOpenChange={setShowLoginAlert}
+          onConfirm={handleLoginRedirect}
+          title="Authentication Required"
+          description="You need to login to access this page."
+          confirmText="Go to Login"
+          cancelText="Cancel"
+          showCancelButton={true}
+        />
+        
+        {/* Don't render children at all when not authenticated */}
+        {null}
+      </>
     );
   }
 
