@@ -26,6 +26,7 @@ import userService from '@/services/user.service';
 // schemas/user.schema.ts
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 // Enhanced user schema with password fields
 export const userSchema = z.object({
@@ -86,14 +87,14 @@ const SingleUser = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const queryClient = useQueryClient();
-    
+
     // State for password visibility
     const [showPassword, setShowPassword] = React.useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-    
+
     // Determine mode from URL params or location state
     const urlParams = new URLSearchParams(location.search);
-    const mode = id 
+    const mode = id
         ? (location.state?.mode || urlParams.get('mode') || 'view')
         : 'new';
 
@@ -128,20 +129,20 @@ const SingleUser = () => {
     const updateMutation = useMutation({
         mutationFn: (data: UserFormData) => {
             const { confirmPassword, password, ...userData } = data;
-            
+
             // Only include password if it's provided (user wants to change it)
             const updateData: any = { ...userData };
             if (password && password.trim() !== '') {
                 updateData.password = password;
             }
-            
+
             return userService.updateUser(id!, updateData);
         },
         onSuccess: () => {
             toast.success('User updated successfully');
             queryClient.invalidateQueries({ queryKey: ['users'] });
             queryClient.invalidateQueries({ queryKey: ['user', id] });
-            
+
             // Clear password fields after successful update
             form.setValue('password', '');
             form.setValue('confirmPassword', '');
@@ -237,9 +238,9 @@ const SingleUser = () => {
     };
 
     const handleSwitchToEdit = () => {
-        navigate(`?mode=edit`, { 
+        navigate(`?mode=edit`, {
             replace: true,
-            state: { mode: 'edit' } 
+            state: { mode: 'edit' }
         });
     };
 
@@ -247,9 +248,9 @@ const SingleUser = () => {
         if (mode === 'new') {
             navigate('/admin/users');
         } else {
-            navigate(`?mode=view`, { 
+            navigate(`?mode=view`, {
                 replace: true,
-                state: { mode: 'view' } 
+                state: { mode: 'view' }
             });
             // Reset form to current user data
             if (user) {
@@ -374,7 +375,7 @@ const SingleUser = () => {
                             Edit User
                         </Button>
                     )}
-                    
+
                     {(mode === 'edit' || mode === 'new') && (
                         <>
                             <Button
@@ -417,11 +418,11 @@ const SingleUser = () => {
                                 <CardHeader>
                                     <CardTitle>Basic Information</CardTitle>
                                     <CardDescription>
-                                        {mode === 'new' 
+                                        {mode === 'new'
                                             ? "Enter user's basic information"
                                             : mode === 'edit'
-                                            ? "Update user's basic information"
-                                            : "View user's basic information"
+                                                ? "Update user's basic information"
+                                                : "View user's basic information"
                                         }
                                     </CardDescription>
                                 </CardHeader>
@@ -470,26 +471,34 @@ const SingleUser = () => {
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Role *</FormLabel>
-                                                    <Select
-                                                        onValueChange={field.onChange}
-                                                        defaultValue={field.value}
-                                                        disabled={isFormDisabled}
-                                                    >
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select role" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="end_user">End User</SelectItem>
-                                                            <SelectItem value="content_creator">Content Creator</SelectItem>
-                                                            <SelectItem value="admin">Admin</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <FormControl>
+                                                        <div className="relative w-50">
+                                                            <select
+                                                                {...field}
+                                                                disabled={isFormDisabled}
+                                                                className={cn(
+                                                                    "w-full appearance-none rounded-md border border-input bg-background pl-3 pr-10 py-2 text-sm",
+                                                                    "ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                                                    "disabled:cursor-not-allowed disabled:opacity-50"
+                                                                )}
+                                                            >
+                                                                <option value="end_user">End User</option>
+                                                                <option value="content_creator">Content Creator</option>
+                                                                <option value="admin">Admin</option>
+                                                            </select>
+                                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 pb-2">
+                                                                <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+
+                                                    </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
+
 
                                         <FormField
                                             control={form.control}
@@ -608,8 +617,8 @@ const SingleUser = () => {
                                         {mode === 'new'
                                             ? "Set user password"
                                             : mode === 'edit'
-                                            ? "Update user password (leave blank to keep current password)"
-                                            : "Password management"
+                                                ? "Update user password (leave blank to keep current password)"
+                                                : "Password management"
                                         }
                                     </CardDescription>
                                 </CardHeader>
@@ -628,8 +637,8 @@ const SingleUser = () => {
                                                             {...field}
                                                             type={showPassword ? "text" : "password"}
                                                             placeholder={
-                                                                mode === 'new' 
-                                                                    ? "Enter password" 
+                                                                mode === 'new'
+                                                                    ? "Enter password"
                                                                     : "Enter new password (leave blank to keep current)"
                                                             }
                                                             disabled={isFormDisabled}
@@ -654,7 +663,7 @@ const SingleUser = () => {
                                                     </div>
                                                 </FormControl>
                                                 <FormDescription>
-                                                    {mode === 'new' 
+                                                    {mode === 'new'
                                                         ? "Password must be at least 8 characters with uppercase, lowercase, and number"
                                                         : "Leave blank to keep current password unchanged"
                                                     }
@@ -707,7 +716,7 @@ const SingleUser = () => {
                                     {mode === 'view' && (
                                         <div className="p-4 border rounded-lg bg-muted/50">
                                             <p className="text-sm text-muted-foreground">
-                                                Password cannot be viewed for security reasons. 
+                                                Password cannot be viewed for security reasons.
                                                 Use edit mode to change the password.
                                             </p>
                                         </div>
@@ -725,8 +734,8 @@ const SingleUser = () => {
                                         {mode === 'new'
                                             ? "Enter user's contact details and billing address"
                                             : mode === 'edit'
-                                            ? "Update user's contact details and billing address"
-                                            : "View user's contact details and billing address"
+                                                ? "Update user's contact details and billing address"
+                                                : "View user's contact details and billing address"
                                         }
                                     </CardDescription>
                                 </CardHeader>
@@ -855,8 +864,8 @@ const SingleUser = () => {
                                         {mode === 'new'
                                             ? "Configure content creator settings"
                                             : mode === 'edit'
-                                            ? "Manage content creator specific settings"
-                                            : "View content creator profile"
+                                                ? "Manage content creator specific settings"
+                                                : "View content creator profile"
                                         }
                                     </CardDescription>
                                 </CardHeader>
@@ -995,8 +1004,8 @@ const SingleUser = () => {
                                         {mode === 'new'
                                             ? "Set email notification preferences"
                                             : mode === 'edit'
-                                            ? "Manage user's email notification preferences"
-                                            : "View user's email notification preferences"
+                                                ? "Manage user's email notification preferences"
+                                                : "View user's email notification preferences"
                                         }
                                     </CardDescription>
                                 </CardHeader>
