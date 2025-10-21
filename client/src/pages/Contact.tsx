@@ -35,13 +35,18 @@ const Contact = () => {
           {/* Email Card */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="bg-card hover:bg-accent/50 border border-border shadow-sm rounded-2xl p-8 flex flex-col items-center justify-center space-y-3 transition-all duration-300"
+            onClick={() => window.location.href = `mailto:${email}`}
+            className="bg-card hover:bg-accent/50 border border-border shadow-sm rounded-2xl p-8 flex flex-col items-center justify-center space-y-3 transition-all duration-300 cursor-pointer"
           >
             <Mail className="w-10 h-10 text-primary" />
             <h2 className="text-xl font-semibold">Email</h2>
             <p className="text-muted-foreground">{email}</p>
+
             <button
-              onClick={handleCopy}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering the mailto link
+                handleCopy();       
+              }}
               className="flex items-center gap-2 text-sm text-primary font-medium hover:underline"
             >
               <Copy className="w-4 h-4" />
