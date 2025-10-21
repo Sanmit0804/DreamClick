@@ -136,7 +136,7 @@ const Admin = () => {
     const sidebarWidth = isMobile ? 256 : 256;
 
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex overflow-hidden">
             <motion.aside
                 className="bg-background border-r flex flex-col fixed md:relative z-20 h-full"
                 initial={false}
