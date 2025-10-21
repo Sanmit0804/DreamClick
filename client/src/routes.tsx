@@ -9,6 +9,9 @@ import NotFound from './pages/NotFound';
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Images = lazy(() => import("./pages/Images"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const VideoTemplates = lazy(() => import("./pages/VideoTemplates"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Admin = lazy(() => import('./pages/Admin/Admin'));
@@ -27,8 +30,20 @@ const openRoutes = [
         element: <Dashboard />,
     },
     {
-        path: '/images',
+        path: '/explore',
         element: <Images />,
+    },
+    {
+        path: '/video-templates',
+        element: <VideoTemplates />,
+    },
+    {
+        path: '/about',
+        element: <About />,
+    },
+    {
+        path: '/contact',
+        element: <Contact />,
     },
 ];
 

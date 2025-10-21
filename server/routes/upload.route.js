@@ -57,4 +57,39 @@ router.get('/files', async (req, res) => {
   }
 });
 
+// DELETE route to remove a file
+router.delete('/files/:fileName', async (req, res) => {
+  try {
+    const bucket = 'mybucket';
+    const fileName = req.params.fileName;
+
+    // Check if the file exists
+    try {
+      await minioClient.statObject(bucket, fileName);
+    } catch (err) {
+      if (err.code === 'NotFound') {
+        return res.status(404).json({
+          success: false,
+          error: 'File not found'
+        });
+      }
+      throw err;
+    }
+
+    // Delete the file
+    await minioClient.removeObject(bucket, fileName);
+
+    res.json({
+      success: true,
+      message: 'File deleted successfully'
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete file'
+    });
+  }
+});
+
 module.exports = router;

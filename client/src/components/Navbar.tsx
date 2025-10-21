@@ -25,9 +25,10 @@ const Navbar = () => {
 
   const menuItems = [
     { path: "/dashboard", label: "Home" },
-    { path: "/images", label: "Images" },
-    { path: "/profile", label: "Profile" },
-    { path: "/settings", label: "Settings" },
+    { path: "/explore", label: "Explore" },
+    { path: "/video-templates", label: "Video Templates" },
+    { path: "/about", label: "About" },
+    { path: "/contact", label: "Contact" },
   ];
 
   const getLinkClass = (path: string) =>
@@ -110,12 +111,14 @@ const Navbar = () => {
             {currentUser.name || "Guest"}
           </span>
 
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-foreground/80 hover:text-destructive transition-colors text-left"
-          >
-            Logout
-          </button>
+          {currentUser.name &&
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-foreground/80 hover:text-destructive transition-colors text-left"
+            >
+              Logout
+            </button>
+          }
         </div>
       )}
     </nav>

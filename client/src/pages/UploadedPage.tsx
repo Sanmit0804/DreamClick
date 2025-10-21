@@ -1,3 +1,4 @@
+import { Trash2, RefreshCw, Image, Copy, ExternalLink } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 interface UploadedFile {
@@ -11,6 +12,7 @@ const UploadedPage = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set());
 
   const fetchUploadedFiles = async () => {
     try {
@@ -42,6 +44,38 @@ const UploadedPage = () => {
     fetchUploadedFiles();
   }, []);
 
+  const deleteFile = async (fileName: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${fileName}"?`)) {
+      return;
+    }
+
+    try {
+      setDeletingFiles(prev => new Set(prev).add(fileName));
+      
+      const res = await fetch(`http://localhost:5000/upload/files/${fileName}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        // Remove the file from the local state
+        setFiles(prev => prev.filter(file => file.name !== fileName));
+      } else {
+        alert('Failed to delete file: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error while deleting file');
+    } finally {
+      setDeletingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileName);
+        return newSet;
+      });
+    }
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -58,7 +92,7 @@ const UploadedPage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
           <p className="mt-4 text-foreground">Loading images...</p>
         </div>
       </div>
@@ -90,18 +124,14 @@ const UploadedPage = () => {
             onClick={fetchUploadedFiles}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <RefreshCw size={16} />
             Refresh
           </button>
         </div>
 
         {files.length === 0 ? (
           <div className="text-center py-12">
-            <svg className="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <Image className="w-24 h-24 text-gray-400 mx-auto mb-4" />
             <p className="text-xl text-gray-500">No images uploaded yet</p>
           </div>
         ) : (
@@ -132,8 +162,9 @@ const UploadedPage = () => {
                       href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 bg-blue-600 text-white text-center py-1 px-2 rounded text-sm hover:bg-blue-700 transition-colors"
+                      className="flex-1 bg-blue-600 text-white text-center py-1 px-2 rounded text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
                     >
+                      <ExternalLink size={14} />
                       View
                     </a>
                     <button
@@ -141,11 +172,29 @@ const UploadedPage = () => {
                         navigator.clipboard.writeText(file.url);
                         alert('URL copied to clipboard!');
                       }}
-                      className="flex-1 bg-gray-600 text-white text-center py-1 px-2 rounded text-sm hover:bg-gray-700 transition-colors"
+                      className="flex-1 bg-gray-600 text-white text-center py-1 px-2 rounded text-sm hover:bg-gray-700 transition-colors flex items-center justify-center gap-1"
                     >
+                      <Copy size={14} />
                       Copy URL
                     </button>
                   </div>
+                  <button
+                    onClick={() => deleteFile(file.name)}
+                    disabled={deletingFiles.has(file.name)}
+                    className="w-full mt-2 bg-red-600 text-white text-center py-1 px-2 rounded text-sm hover:bg-red-700 transition-colors disabled:bg-red-400 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                  >
+                    {deletingFiles.has(file.name) ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-1 border-white"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={15}/>
+                        Delete
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             ))}
