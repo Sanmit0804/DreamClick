@@ -6,6 +6,7 @@ import ReactPlayer from 'react-player';
 const VideoTemplates = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hoverStates, setHoverStates] = useState<{ [key: number]: boolean }>({});
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const deviceType = useDeviceType();
 
   const handleMouseEnter = (index: number) => {
@@ -14,6 +15,10 @@ const VideoTemplates = () => {
 
   const handleMouseLeave = (index: number) => {
     setHoverStates(prev => ({ ...prev, [index]: false }));
+  };
+
+  const handlePlayClick = (index: number) => {
+    setPlayingIndex(index);
   };
 
   // FOR EXAMPLE
@@ -107,7 +112,9 @@ const VideoTemplates = () => {
   return (
     <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6">
       {videos.map((video, index) => {
-        const showThumbnail = deviceType === 'mobile' && video.thumbnail;
+        const isMobile = deviceType === 'mobile';
+        const showThumbnail = isMobile && video.thumbnail;
+        const isPlaying = isMobile ? playingIndex === index : hoverStates[index];
 
         return (
           <div key={index} className="flex flex-col items-start w-[calc(50%-6px)] sm:w-48 md:w-56 lg:w-60 xl:w-64">
@@ -118,19 +125,24 @@ const VideoTemplates = () => {
               style={{ height: 'clamp(300px, 70vw, 460px)' }}
             >
               <ReactPlayer
+                key={isMobile ? `mobile-${playingIndex}-${index}` : `desktop-${index}`}
                 src={video.src}
-                playing={hoverStates[index]}
+                playing={isPlaying}
                 muted={true}
-                controls={hoverStates[index]}
+                controls={isPlaying}
                 width="100%"
                 height="100%"
                 light={showThumbnail ? video.thumbnail : false}
+                onClickPreview={() => handlePlayClick(index)}
                 playIcon={
-                  <button className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </button>
+                  <div className="flex flex-col items-center gap-2">
+                    <button className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors">
+                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </button>
+                    <span className="text-white text-xs bg-black/60 px-2 py-1 rounded">Tap twice to play</span>
+                  </div>
                 }
               />
             </div>
