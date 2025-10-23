@@ -113,11 +113,7 @@ class AuthService {
         }
 
         try {
-            const response = await api.post<AuthResponse>('/auth/signup', {
-                name: data.name,
-                email: data.email,
-                password: data.password,
-            })
+            const response = await api.post<AuthResponse>('/auth/signup', data)
             
             // Save token
             if (response.data.token) {

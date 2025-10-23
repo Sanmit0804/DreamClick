@@ -26,7 +26,7 @@ class AuthService {
         if (existingUser) {
             throw new Error('Email already in use');
         }
-
+        console.log("user data---", userData);
         const user = new User({ ...userData });
         await user.save();
 
