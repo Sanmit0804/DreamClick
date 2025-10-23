@@ -19,7 +19,7 @@ import authService from "@/services/auth"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import useDeviceType from "@/hooks/useDeviceType"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 // ✅ Define Zod schemas for validation
 const loginSchema = z.object({
@@ -42,10 +42,34 @@ type LoginFormData = z.infer<typeof loginSchema>
 type SignupFormData = z.infer<typeof signupSchema>
 
 export default function Auth() {
-    const [isLoginScreen, setIsLoginScreen] = useState(true);
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const currentDevice = useDeviceType();
     const navigate = useNavigate();
+
+    // Determine initial mode from URL query parameter
+    const getInitialMode = () => {
+        const mode = searchParams.get('mode');
+        return mode === 'signup' ? false : true; // Default to login if no mode or invalid mode
+    }
+
+    const [isLoginScreen, setIsLoginScreen] = useState(getInitialMode());
+
+    // Update URL when mode changes
+    const updateUrlMode = (isLogin: boolean) => {
+        const newMode = isLogin ? 'login' : 'signup';
+        setSearchParams({ mode: newMode });
+    }
+
+    // Sync state with URL changes
+    useEffect(() => {
+        const mode = searchParams.get('mode');
+        if (mode === 'signup') {
+            setIsLoginScreen(false);
+        } else if (mode === 'login') {
+            setIsLoginScreen(true);
+        }
+    }, [searchParams]);
 
     // Login form
     const {
@@ -94,6 +118,7 @@ export default function Auth() {
             console.log("Signup response:", response);
 
             setIsLoginScreen(true);
+            updateUrlMode(true); // Update URL to login mode
             signupReset();
             // toast.info("Please login with your new credentials");
 
@@ -116,7 +141,9 @@ export default function Auth() {
     }
 
     const switchMode = () => {
-        setIsLoginScreen(!isLoginScreen);
+        const newIsLoginScreen = !isLoginScreen;
+        setIsLoginScreen(newIsLoginScreen);
+        updateUrlMode(newIsLoginScreen);
         loginReset();
         signupReset();
     }

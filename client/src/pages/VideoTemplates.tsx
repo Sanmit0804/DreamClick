@@ -32,7 +32,7 @@ const VideoTemplates = () => {
   if (isLoading) {
     return (
       <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6">
-        {[...Array(8)].map((_, index) => (
+        {[...Array(10)].map((_, index) => (
           <div key={index} className="flex flex-col items-start w-[calc(50%-6px)] sm:w-48 md:w-56 lg:w-60 xl:w-64">
             <div className="overflow-hidden rounded-md w-full" style={{ height: 'clamp(300px, 70vw, 460px)' }}>
               <Skeleton className="h-full w-full" />
