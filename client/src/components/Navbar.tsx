@@ -136,7 +136,7 @@ const Navbar = () => {
           className={cn(
             "text-sm font-medium",
             textClasses,
-            "hover:text-primary transition-colors duration-300"
+            "hover:text-red-500 transition-colors duration-300"
           )}
         >
           {currentUser.name ? 'Logout' : 'Login'}
