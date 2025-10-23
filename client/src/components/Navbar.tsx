@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -8,33 +8,35 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
-import { HelpCircle, LogIn, LogOut, Menu, Settings, User, UserPlus, X } from "lucide-react";
+import { LogIn, LogOut, Menu, UserPlus } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetTrigger
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -58,11 +60,38 @@ const Navbar = () => {
         : "text-foreground/80"
     );
 
+  // Dynamic navbar classes - FIXED FOR LIGHT MODE
+  const navbarClasses = cn(
+    "w-full px-4 sm:px-8 py-3 flex items-center justify-between relative z-50 transition-all duration-300",
+    "sticky top-0",
+    // Background that works in BOTH modes
+    isScrolled
+      ? "bg-background/50 backdrop-blur-sm border-b"
+      : "bg-transparent/80 backdrop-blur-sm border-transparent"
+  );
+
+  // Text classes that work in BOTH modes
+  const textClasses = cn(
+    "transition-colors duration-300",
+    isScrolled ? "text-foreground" : "text-foreground/90"
+  );
+
+  // User badge classes - FIXED FOR LIGHT MODE
+  const userBadgeClasses = cn(
+    "cursor-pointer px-4 py-1 rounded-full font-medium text-sm transition-all duration-300",
+    isScrolled
+      ? "bg-foreground/10 text-foreground"
+      : "bg-foreground/10 text-foreground/90"
+  );
+
   return (
-    <nav className="w-full px-4 sm:px-8 py-3 flex items-center justify-between border-b bg-background relative">
+    <nav className={navbarClasses}>
       {/* Logo */}
       <div
-        className="text-2xl font-bold tracking-tight cursor-pointer md:absolute md:left-8"
+        className={cn(
+          "text-2xl font-bold tracking-tight cursor-pointer md:absolute md:left-8",
+          textClasses
+        )}
         onClick={() => navigate("/dashboard")}
       >
         Dream Click
@@ -75,7 +104,13 @@ const Navbar = () => {
             {menuItems.map((item) => (
               <NavigationMenuItem key={item.path}>
                 <NavigationMenuLink asChild>
-                  <Link to={item.path} className={getLinkClass(item.path)}>
+                  <Link
+                    to={item.path}
+                    className={cn(
+                      getLinkClass(item.path),
+                      textClasses
+                    )}
+                  >
                     {item.label}
                   </Link>
                 </NavigationMenuLink>
@@ -87,7 +122,10 @@ const Navbar = () => {
 
       {/* Desktop Right Side Items */}
       <div className="hidden md:flex items-center gap-4 absolute right-8">
-        <span className="cursor-pointer px-4 py-1 rounded-full bg-foreground/10 text-foreground font-medium text-sm" onClick={() => navigate('/admin')}>
+        <span
+          className={userBadgeClasses}
+          onClick={() => navigate('/admin')}
+        >
           {currentUser.name || "Guest"}
         </span>
 
@@ -95,7 +133,11 @@ const Navbar = () => {
 
         <button
           onClick={handleLogout}
-          className="text-sm font-medium text-foreground/80 hover:text-destructive transition-colors text-left"
+          className={cn(
+            "text-sm font-medium",
+            textClasses,
+            "hover:text-primary transition-colors duration-300"
+          )}
         >
           {currentUser.name ? 'Logout' : 'Login'}
         </button>
@@ -111,7 +153,11 @@ const Navbar = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden hover:bg-accent"
+              className={cn(
+                "md:hidden",
+                textClasses,
+                "hover:bg-accent/50 transition-all duration-300"
+              )}
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
@@ -153,17 +199,16 @@ const Navbar = () => {
                   {menuItems.map((item, index) => (
                     <Button
                       key={item.path}
-                      variant={getLinkClass(item.path).includes('bg-accent') ? "secondary" : "ghost"}
+                      variant={location.pathname === item.path ? "secondary" : "ghost"}
                       className="w-full justify-start gap-3 h-12 px-3"
                       onClick={() => {
                         navigate(item.path);
                         setMobileMenuOpen(false);
                       }}
                     >
-                      {/* Add icons based on your menu items */}
-                      <div className={`w-2 h-2 rounded-full ${getLinkClass(item.path).includes('bg-accent')
-                        ? 'bg-primary'
-                        : 'bg-muted-foreground/30'
+                      <div className={`w-2 h-2 rounded-full ${location.pathname === item.path
+                          ? 'bg-primary'
+                          : 'bg-muted-foreground/30'
                         }`} />
                       <span className="flex-1 text-left">{item.label}</span>
                       {index === 2 && (
@@ -217,20 +262,6 @@ const Navbar = () => {
                     </Button>
                   </div>
                 )}
-
-                {/* Quick Actions */}
-                {/* <div className="pt-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" className="gap-1">
-                      <Settings className="h-3 w-3" />
-                      Settings
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-1">
-                      <HelpCircle className="h-3 w-3" />
-                      Help
-                    </Button>
-                  </div>
-                </div> */}
               </div>
             </div>
           </SheetContent>
