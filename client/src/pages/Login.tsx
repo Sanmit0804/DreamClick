@@ -212,7 +212,7 @@ export default function Auth() {
                 </div>
 
 
-            <Card style={{ width: '500px'}} className={deviceType == 'mobile' ? 'mx-4 mt-80 mb-10' : ''}>
+            <Card style={{ width: '500px'}} className={deviceType == 'mobile' && !isLoginScreen ? 'mx-4 mt-80 mb-10' : 'mx-4'}>
                     <CardHeader className="text-center px-4 py-4 sm:px-6">
                         <CardTitle className="text-xl sm:text-2xl font-semibold">
                             {isLoginScreen ? "Welcome Back" : "Create Account"}
