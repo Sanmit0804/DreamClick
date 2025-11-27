@@ -21,7 +21,7 @@ const Home = () => {
                     Welcome to <span className="text-primary">DreamClick</span>
                 </h1>
                 <p className="text-muted-foreground mb-6 text-lg">
-                    Explore stunning photos, cinematic videos, and premium VN templates.
+                    Explore stunning photos, cinematic videos, and premium Video templates.
                 </p>
                 <Button className="group" onClick={() => navigate('/video-templates')}>
                     Explore Gallery
@@ -68,9 +68,9 @@ const Home = () => {
                     <Card className="cursor-pointer hover:shadow-xl transition-all">
                         <CardContent className="flex flex-col items-center justify-center py-10">
                             <Sparkles className="h-10 w-10 text-primary mb-3" />
-                            <h3 className="font-semibold text-lg mb-2">VN Templates</h3>
+                            <h3 className="font-semibold text-lg mb-2">Video Templates</h3>
                             <p className="text-sm text-muted-foreground text-center">
-                                Buy VN templates and receive them instantly.
+                                Buy Video templates and receive them instantly.
                             </p>
                         </CardContent>
                     </Card>

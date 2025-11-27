@@ -31,7 +31,7 @@ const About = () => {
           <h2 className="text-xl font-semibold sm:text-2xl">What We Offer</h2>
           <ul className="list-disc text-left mx-auto mt-3 sm:mt-4 space-y-2 max-w-md text-sm sm:text-base">
             <li>High-quality images for free download</li>
-            <li>Exclusive VN templates for professional video editing</li>
+            <li>Exclusive video templates for professional video editing</li>
             <li>Preview sample videos before purchase</li>
             <li>Simple, email-based checkout — no account needed</li>
           </ul>
