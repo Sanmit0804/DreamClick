@@ -2,11 +2,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import useDeviceType from '@/hooks/useDeviceType';
 import React, { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
+import VideoTemplateModal from '@/components/VideoTemplateModal';
 
 const VideoTemplates = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hoverStates, setHoverStates] = useState<{ [key: number]: boolean }>({});
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
   const deviceType = useDeviceType();
 
   const handleMouseEnter = (index: number) => {
@@ -50,7 +52,7 @@ const VideoTemplates = () => {
 
   const videos = [
     {
-      src: './sample_video.mp4',
+      src: 'https://www.youtube.com/shorts/SCvvhs8GNxE',
       thumbnail: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
       title: 'Cinematic Travel',
       description: 'Perfect for adventure reels',
@@ -110,65 +112,78 @@ const VideoTemplates = () => {
   ];
 
   return (
-    <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6">
-      {videos.map((video, index) => {
-        const isMobile = deviceType === 'mobile';
-        const showThumbnail = isMobile && video.thumbnail;
-        const isPlaying = isMobile ? playingIndex === index : hoverStates[index];
+    <>
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6">
+        {videos.map((video, index) => {
+          const isMobile = deviceType === 'mobile';
+          const showThumbnail = isMobile && video.thumbnail;
+          const isPlaying = isMobile ? playingIndex === index : hoverStates[index];
 
-        return (
-          <div key={index} className="flex flex-col items-start w-[calc(50%-6px)] sm:w-48 md:w-56 lg:w-60 xl:w-64">
-            <div
-              onMouseEnter={() => handleMouseEnter(index)}
-              onMouseLeave={() => handleMouseLeave(index)}
-              className="overflow-hidden rounded-md w-full"
-              style={{ height: 'clamp(300px, 70vw, 460px)' }}
-            >
-              <ReactPlayer
-                key={isMobile ? `mobile-${playingIndex}-${index}` : `desktop-${index}`}
-                src={video.src}
-                playing={isPlaying}
-                muted={true}
-                controls={isPlaying}
-                width="100%"
-                height="100%"
-                light={showThumbnail ? video.thumbnail : false}
-                onClickPreview={() => handlePlayClick(index)}
-                playIcon={
-                  <div className="flex flex-col items-center gap-2">
-                    <button className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors">
-                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </button>
-                    <span className="text-white text-xs bg-black/60 px-2 py-1 rounded">Tap twice to play</span>
-                  </div>
-                }
-              />
-            </div>
+          return (
+            <div key={index} className="flex flex-col items-start w-[calc(50%-6px)] sm:w-48 md:w-56 lg:w-60 xl:w-64">
+              <div
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={() => handleMouseLeave(index)}
+                className="overflow-hidden rounded-md w-full"
+                style={{ height: 'clamp(300px, 70vw, 460px)' }}
+              >
+                <ReactPlayer
+                  key={isMobile ? `mobile-${playingIndex}-${index}` : `desktop-${index}`}
+                  src={video.src}
+                  playing={isPlaying}
+                  muted={true}
+                  controls={isPlaying}
+                  width="100%"
+                  height="100%"
+                  light={showThumbnail ? video.thumbnail : false}
+                  onClickPreview={() => handlePlayClick(index)}
+                  playIcon={
+                    <div className="flex flex-col items-center gap-2">
+                      <button className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors">
+                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </button>
+                      <span className="text-white text-xs bg-black/60 px-2 py-1 rounded">Tap twice to play</span>
+                    </div>
+                  }
+                />
+              </div>
 
-            <div className="mt-2 w-full">
-              <p className="cursor-pointer font-medium text-foreground text-xs sm:text-sm md:text-base line-clamp-2">
-                {video.title}
-              </p>
-              <p className="text-muted-foreground text-xs sm:text-sm line-clamp-2 mt-1">
-                {video.description}
-              </p>
-              <div className="flex items-center mt-1">
-                {video.oldPrice && (
-                  <span className="text-muted-foreground me-2 sm:me-3 line-through text-xs sm:text-sm">
-                    {video.oldPrice}
+              <div className="mt-2 w-full">
+                <p
+                  onClick={() => setSelectedTemplate(video)}
+                  className="cursor-pointer font-medium text-foreground text-xs sm:text-sm md:text-base line-clamp-2 hover:underline"
+                >
+                  {video.title}
+                </p>
+                <p className="text-muted-foreground text-xs sm:text-sm line-clamp-2 mt-1">
+                  {video.description}
+                </p>
+                <div className="flex items-center mt-1">
+                  {video.oldPrice && (
+                    <span className="text-muted-foreground me-2 sm:me-3 line-through text-xs sm:text-sm">
+                      {video.oldPrice}
+                    </span>
+                  )}
+                  <span className="text-primary font-semibold text-xs sm:text-sm md:text-base">
+                    {video.price}
                   </span>
-                )}
-                <span className="text-primary font-semibold text-xs sm:text-sm md:text-base">
-                  {video.price}
-                </span>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {selectedTemplate && (
+        <VideoTemplateModal
+          video={selectedTemplate}
+          isOpen={!!selectedTemplate}
+          onClose={() => setSelectedTemplate(null)}
+        />
+      )}
+    </>
   );
 };
 
