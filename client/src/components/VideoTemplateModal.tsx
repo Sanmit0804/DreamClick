@@ -74,28 +74,34 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, 
                         <div className="space-y-4 border-t pt-4">
                             <h3 className="font-semibold flex items-center gap-2">
                                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                                How to get Permission
+                                How Access Works
                             </h3>
                             <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-5">
-                                <li>Purchase the template using the payment details below.</li>
-                                <li>Take a screenshot of the successful payment.</li>
+                                <li>Complete payment securely via Razorpay.</li>
+                                <li>Choose UPI, Card, Net Banking, or Wallet.</li>
+                                <li>Product link is sent to your registered email.</li>
                             </ul>
                         </div>
 
                         <div className="space-y-4 border-t pt-4">
                             <h3 className="font-semibold flex items-center gap-2">
                                 <CreditCard className="h-5 w-5 text-blue-500" />
-                                Payment Instructions
+                                Payment Details
                             </h3>
-                            <div className="bg-muted/50 p-4 rounded-lg text-sm space-y-2 border">
-                                <p><strong>UPI ID:</strong> dreamclick@upi (Example)</p>
-                                <p className="text-xs text-muted-foreground mt-2 italic">* Please mention the template name in the payment remarks.</p>
+                            <div className="bg-muted/50 p-4 rounded-lg text-sm border">
+                                <p>Secure payments powered by <strong>Razorpay</strong>.</p>
+                                <p className="text-xs text-muted-foreground italic">
+                                    * Ensure your email is correct for delivery.
+                                </p>
                             </div>
                         </div>
 
                         <div className="mt-auto pt-6">
-                            <Button className="w-full text-lg py-6 shadow-md hover:shadow-lg transition-all">Buy Now</Button>
+                            <Button className="w-full text-lg py-6 shadow-md hover:shadow-lg transition-all">
+                                Buy Now
+                            </Button>
                         </div>
+
                     </div>
                 </CardContent>
             </Card>

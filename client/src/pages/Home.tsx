@@ -23,7 +23,7 @@ const Home = () => {
                 <p className="text-muted-foreground mb-6 text-lg">
                     Explore stunning photos, cinematic videos, and premium Video templates.
                 </p>
-                <Button className="group" onClick={() => navigate('/video-templates')}>
+                <Button className="group" onClick={() => navigate('/explore')}>
                     Explore Gallery
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -35,7 +35,7 @@ const Home = () => {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                 >
-                    <Card className="cursor-pointer hover:shadow-xl transition-all">
+                    <Card className="cursor-pointer hover:shadow-xl transition-all" onClick={() => navigate('/explore')}>
                         <CardContent className="flex flex-col items-center justify-center py-10">
                             <Camera className="h-10 w-10 text-primary mb-3" />
                             <h3 className="font-semibold text-lg mb-2">Photos</h3>
@@ -65,7 +65,7 @@ const Home = () => {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                 >
-                    <Card className="cursor-pointer hover:shadow-xl transition-all">
+                    <Card className="cursor-pointer hover:shadow-xl transition-all" onClick={() => navigate('/video-templates')}>
                         <CardContent className="flex flex-col items-center justify-center py-10">
                             <Sparkles className="h-10 w-10 text-primary mb-3" />
                             <h3 className="font-semibold text-lg mb-2">Video Templates</h3>

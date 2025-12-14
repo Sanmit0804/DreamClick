@@ -66,7 +66,7 @@ const Navbar = () => {
     "sticky top-0",
     // Background that works in BOTH modes
     isScrolled
-      ? "bg-background/50 backdrop-blur-sm border-b"
+      ? "bg-background/50 backdrop-blur-sm"
       : "bg-transparent/80 backdrop-blur-sm border-transparent"
   );
 
@@ -207,8 +207,8 @@ const Navbar = () => {
                       }}
                     >
                       <div className={`w-2 h-2 rounded-full ${location.pathname === item.path
-                          ? 'bg-primary'
-                          : 'bg-muted-foreground/30'
+                        ? 'bg-primary'
+                        : 'bg-muted-foreground/30'
                         }`} />
                       <span className="flex-1 text-left">{item.label}</span>
                       {index === 2 && (
