@@ -3,6 +3,7 @@ import ReactPlayer from 'react-player';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, CreditCard } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface VideoTemplate {
     src: string;
@@ -21,6 +22,7 @@ interface VideoTemplateModalProps {
 
 const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, onClose }) => {
     if (!isOpen) return null;
+    const isMobile = useIsMobile();
 
     // Prevent scrolling when modal is open
     useEffect(() => {
@@ -43,18 +45,20 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, 
                 </CardHeader>
 
                 <CardContent className="flex-1 overflow-auto p-0 md:flex">
-                    <div className="w-full md:w-1/2 bg-black/5 p-4 flex items-center justify-center min-h-[300px] md:min-h-full border-r">
-                        <div className="relative w-full aspect-[9/16] max-h-[60vh] max-w-[300px] rounded-lg overflow-hidden shadow-lg">
-                            <ReactPlayer
-                                src={video.src}
-                                playing={true}
-                                controls={true}
-                                width="100%"
-                                height="100%"
-                                light={false}
-                            />
+                    {!isMobile &&
+                        <div className="w-full md:w-1/2 bg-black/5 p-4 flex items-center justify-center min-h-[300px] md:min-h-full border-r">
+                            <div className="relative w-full aspect-[9/16] max-h-[60vh] max-w-[300px] rounded-lg overflow-hidden shadow-lg">
+                                <ReactPlayer
+                                    src={video.src}
+                                    playing={true}
+                                    controls={true}
+                                    width="100%"
+                                    height="100%"
+                                    light={false}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    }
 
                     <div className="w-full md:w-1/2 p-6 flex flex-col gap-6">
                         <div className="space-y-4">

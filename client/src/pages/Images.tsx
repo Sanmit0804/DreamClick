@@ -93,8 +93,9 @@ function Images() {
   ]
 
   return (
-    <div className="App lg-react-element">
+    <div className="App">
       <LightGallery
+        elementClassNames="lg-react-element"
         speed={500}
         plugins={[lgThumbnail, lgZoom]}
       >

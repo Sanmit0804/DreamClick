@@ -1,6 +1,22 @@
 .lg-react-element {
-    column-count: 2;
-    column-gap: 10px;
+    column-count: 4;
+    column-gap: 15px;
+
+    @media (max-width: 900px) {
+        column-count: 3;
+    }
+
+    @media (max-width: 600px) {
+        column-count: 2;
+    }
+
+
+}
+
+.lg-react-element a {
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 15px;
 }
 
 img {
