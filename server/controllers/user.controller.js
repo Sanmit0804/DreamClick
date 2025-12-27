@@ -1,4 +1,4 @@
-const userService = require('../services/user.service');
+const { userService } = require('../services/index');
 const catchAsync = require('../utils/catchAsync');
 
 class userController {

@@ -1,26 +1,30 @@
-const User = require('../models/user.model');
+const User = require('../models/index').UserModel;
 
-class userService {
-    async getUsers() {
-        return await User.find();
-    }
+const getUsers = async () => {
+    return await User.find();
+};
 
-    async getUserById(userId) {
-        return await User.findById(userId);
-    }
+const getUserById = async (userId) => {
+    return await User.findById(userId);
+};
 
-    async createUser(data) {
-        const newUser = new User(data);
-        return await newUser.save();
-    }
+const createUser = async (data) => {
+    const newUser = new User(data);
+    return await newUser.save();
+};
 
-    async updateUser(userId, data) {
-        return await User.findByIdAndUpdate(userId, data, { new: true, runValidators: true });
-    }
+const updateUser = async (userId, data) => {
+    return await User.findByIdAndUpdate(userId, data, { new: true, runValidators: true });
+};
 
-    async deleteUserById(userId) {
-        return await User.findByIdAndDelete(userId);
-    }
-}
+const deleteUserById = async (userId) => {
+    return await User.findByIdAndDelete(userId);
+};
 
-module.exports = new userService();
+module.exports = {
+    getUsers,
+    getUserById,
+    createUser,
+    updateUser,
+    deleteUserById
+};

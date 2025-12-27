@@ -3,11 +3,10 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path'); 
+const path = require('path');
 const authRoute = require('./routes/auth.route');
-const userRoute = require('./routes/user.route');
 const uploadRoute = require('./routes/upload.route');
-const ensureAuthenticated = require('./middlewares/Auth');
+const routes = require('./routes/index');
 
 dotenv.config();
 const app = express();
@@ -21,7 +20,7 @@ app.options('*', cors());
 
 app.get("/ping", (req, res) => res.send("PONGG"));
 app.use('/auth', authRoute);
-app.use('/api', userRoute);
+app.use('/api', routes);
 app.use('/upload', uploadRoute);
 
 // ✅ Serve frontend (for BrowserRouter)
