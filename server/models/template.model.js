@@ -22,7 +22,6 @@ const templateSchema = new mongoose.Schema({
     },
     templateThumbnail: {
         type: String,
-        required: true,
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -36,7 +35,6 @@ const templateSchema = new mongoose.Schema({
     },
     templateTags: {
         type: [String],
-        required: true,
     },
 }, { timestamps: true });
 

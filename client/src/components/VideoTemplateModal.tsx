@@ -6,12 +6,13 @@ import { X, CheckCircle2, CreditCard } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface VideoTemplate {
-    src: string;
-    thumbnail?: string;
-    title: string;
-    description: string;
-    price: string;
-    oldPrice?: string;
+    templateId: number;
+    templateSrc: string;
+    templateThumbnail?: string;
+    templateTitle: string;
+    templateDescription: string;
+    templatePrice: string;
+    templateOldPrice?: string;
 }
 
 interface VideoTemplateModalProps {
@@ -38,7 +39,7 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, 
 
             <Card className="z-50 w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200 border-border/50">
                 <CardHeader className="flex flex-row items-center justify-between border-b">
-                    <CardTitle className="text-xl md:text-2xl font-bold">{video.title}</CardTitle>
+                    <CardTitle className="text-xl md:text-2xl font-bold">{video.templateTitle}</CardTitle>
                     <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-muted">
                         <X className="h-5 w-5" />
                     </Button>
@@ -49,7 +50,7 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, 
                         <div className="w-full md:w-1/2 bg-black/5 p-4 flex items-center justify-center min-h-[300px] md:min-h-full border-r">
                             <div className="relative w-full aspect-[9/16] max-h-[60vh] max-w-[300px] rounded-lg overflow-hidden shadow-lg">
                                 <ReactPlayer
-                                    src={video.src}
+                                    src={video.templateSrc}
                                     playing={true}
                                     controls={true}
                                     width="100%"
@@ -64,13 +65,13 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, 
                         <div className="space-y-4">
                             <div>
                                 <h3 className="font-semibold text-lg mb-1">Description</h3>
-                                <p className="text-muted-foreground">{video.description}</p>
+                                <p className="text-muted-foreground">{video.templateDescription}</p>
                             </div>
 
                             <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-bold text-primary">{video.price}</span>
-                                {video.oldPrice && (
-                                    <span className="text-sm text-muted-foreground line-through">{video.oldPrice}</span>
+                                <span className="text-3xl font-bold text-primary">{video.templatePrice}</span>
+                                {video.templateOldPrice && (
+                                    <span className="text-sm text-muted-foreground line-through">{video.templateOldPrice}</span>
                                 )}
                             </div>
                         </div>
