@@ -1,3 +1,4 @@
+const TemplateService = require("../services/template.service");
 const catchAsync = require("../utils/catchAsync");
 
 class TemplateController {
