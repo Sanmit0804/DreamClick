@@ -9,7 +9,7 @@ interface VideoTemplate {
   _id: string;
   templateName: string;
   templateDescription: string;
-  templateContent: string;
+  videoUrl: string;
   templatePrice: number;
   templateThumbnail: string;
   userId: string;
@@ -55,7 +55,7 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({ video, isOpen, 
             <div className="w-full md:w-1/2 bg-black/5 p-4 flex items-center justify-center min-h-[300px] md:min-h-full border-r">
               <div className="relative w-full aspect-[9/16] max-h-[60vh] max-w-[300px] rounded-lg overflow-hidden shadow-lg">
                 <ReactPlayer
-                  src={video.templateContent}
+                  src={video.videoUrl}
                   playing={true}
                   controls={true}
                   width="100%"

@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
 import VideoTemplateModal from '@/components/VideoTemplateModal';
 import templateService from '@/services/template.service';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface VideoTemplate {
   _id: string;
   templateName: string;
   templateDescription: string;
-  templateContent: string;
+  videoUrl: string;
   templatePrice: number;
   templateThumbnail: string;
   userId: string;
@@ -27,6 +29,7 @@ const VideoTemplates = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<VideoTemplate | null>(null);
   const [videoTemplates, setVideoTemplates] = useState<VideoTemplate[]>([]);
   const deviceType = useDeviceType();
+  const navigate = useNavigate();
 
   const handleMouseEnter = (templateId: string) => {
     setHoverStates(prev => ({ ...prev, [templateId]: true }));
@@ -57,27 +60,13 @@ const VideoTemplates = () => {
     fetchVideoTemplates();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6">
-        {[...Array(10)].map((_, index) => (
-          <div key={index} className="flex flex-col items-start w-[calc(50%-6px)] sm:w-48 md:w-56 lg:w-60 xl:w-64">
-            <div className="overflow-hidden rounded-md w-full" style={{ height: 'clamp(300px, 70vw, 460px)' }}>
-              <Skeleton className="h-full w-full" />
-            </div>
-            <div className="mt-2 w-full space-y-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  if (isLoading) { return (<span> Loading...</span>) };
 
   return (
     <>
+      <div className='flex justify-end'>
+        <Button size={'sm'} onClick={() => navigate('/video-templates/add-template')}>Add Template</Button>
+      </div>
       <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6">
         {videoTemplates.length > 0 && videoTemplates.map((template, index) => {
           const isMobile = deviceType === 'mobile';
@@ -85,7 +74,7 @@ const VideoTemplates = () => {
           const isPlaying = isMobile ? playingIndex === index : hoverStates[template._id];
 
           return (
-            <div key={template._id} className="flex flex-col items-start w-[calc(50%-6px)] sm:w-48 md:w-56 lg:w-60 xl:w-64">
+            <div key={template._id} className="flex flex-col items-start sm:w-48 md:w-56 lg:w-60 xl:w-80">
               <div
                 onMouseEnter={() => handleMouseEnter(template._id)}
                 onMouseLeave={() => handleMouseLeave(template._id)}
@@ -94,7 +83,7 @@ const VideoTemplates = () => {
               >
                 <ReactPlayer
                   key={isMobile ? `mobile-${playingIndex}-${index}` : `desktop-${template._id}`}
-                  src={template.templateContent}
+                  src={template.videoUrl}
                   playing={isPlaying}
                   muted={true}
                   controls={isPlaying}

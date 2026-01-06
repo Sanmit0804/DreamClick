@@ -11,7 +11,7 @@ const templateSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    templateContent: {
+    videoUrl: {
         type: String,
         required: true,
         trim: true,
@@ -26,11 +26,6 @@ const templateSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
-    },
-    templateCategory: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TemplateCategory',
         required: true,
     },
     templateTags: {

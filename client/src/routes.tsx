@@ -5,13 +5,14 @@ import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import RootLayout from './components/Layouts/RootLayout';
 import NotFound from './pages/NotFound';
+import AddVideoTemplate from './pages/Templates/AddVideoTemplate';
 
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Images = lazy(() => import("./pages/Images"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
-const VideoTemplates = lazy(() => import("./pages/VideoTemplates"));
+const VideoTemplates = lazy(() => import("./pages/Templates/VideoTemplates"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Admin = lazy(() => import('./pages/Admin/Admin'));
@@ -57,6 +58,10 @@ const protectedRoutes = [
         path: '/settings',
         element: <Settings />,
     },
+    {
+        path: '/video-templates/add-template',
+        element: <AddVideoTemplate />,
+    }
 ];
 
 export const AppRoutes = () => {
