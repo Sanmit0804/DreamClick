@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import useAuth from "@/hooks/useAuth";
 
 const Navbar = () => {
   const location = useLocation();
@@ -26,20 +27,17 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user: currentUser } = useAuth();
 
   // Scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
   };
@@ -126,7 +124,7 @@ const Navbar = () => {
           className={userBadgeClasses}
           onClick={() => navigate('/admin')}
         >
-          {currentUser.name || "Guest"}
+          {currentUser?.name ?? "Guest"}
         </span>
 
         <ModeToggle />
@@ -139,7 +137,7 @@ const Navbar = () => {
             "hover:text-red-500 transition-colors duration-300"
           )}
         >
-          {currentUser.name ? 'Logout' : 'Login'}
+          {currentUser?.name ? 'Logout' : 'Login'}
         </button>
       </div>
 
@@ -175,17 +173,17 @@ const Navbar = () => {
               <div className="px-6 py-4">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" onClick={() => navigate('/admin')}>
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                    <AvatarImage src={currentUser?.creatorProfile?.avatar} alt={currentUser?.name} />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "G"}
+                      {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "G"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">
-                      {currentUser.name || "Guest User"}
+                      {currentUser?.name ?? "Guest User"}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {currentUser.email || "Welcome to our app!"}
+                      {currentUser?.email ?? "Welcome to our app!"}
                     </p>
                   </div>
                 </div>
@@ -225,7 +223,7 @@ const Navbar = () => {
 
               {/* Action Section */}
               <div className="p-4 space-y-3">
-                {currentUser.name ? (
+                {currentUser?.name ? (
                   <div className="space-y-2">
                     <Button
                       variant="destructive"

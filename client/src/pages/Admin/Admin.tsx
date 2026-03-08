@@ -10,11 +10,12 @@ import {
 } from '@/components/ui/breadcrumb';
 import {
     BarChart3, Settings, Users, Package, ShoppingCart, Home,
-    ChevronRight, Plus, List, Edit,
+    ChevronRight, Plus, List, Edit, Film,
 } from 'lucide-react';
 import ManageUser from './UserManagement/ManageUser';
-import useDeviceType from '@/hooks/useDeviceType';
 import EditUser from './UserManagement/SingleUser';
+import AdminTemplates from './TemplateManagement/AdminTemplates';
+import useDeviceType from '@/hooks/useDeviceType';
 
 interface MenuItem {
     id: string;
@@ -87,6 +88,14 @@ const Admin = () => {
                 { id: 'sales-analytics', label: 'Sales Analytics', path: '/admin/analytics/sales', icon: BarChart3 },
                 { id: 'customer-analytics', label: 'Customer Analytics', path: '/admin/analytics/customers', icon: Users },
                 { id: 'product-analytics', label: 'Product Analytics', path: '/admin/analytics/products', icon: Package },
+            ],
+        },
+        {
+            id: 'templates',
+            icon: Film,
+            label: 'Templates',
+            subItems: [
+                { id: 'template-list', label: 'All Templates', path: '/admin/templates', icon: List },
             ],
         },
         {
@@ -251,6 +260,7 @@ const Admin = () => {
                             <Route path="/settings/general" element={<PageTransition><GeneralSettings /></PageTransition>} />
                             <Route path="/users" element={<PageTransition><ManageUser /></PageTransition>} />
                             <Route path="/users/:id" element={<PageTransition><EditUser /></PageTransition>} />
+                            <Route path="/templates" element={<PageTransition><AdminTemplates /></PageTransition>} />
                         </Routes>
                     </AnimatePresence>
                 </div>

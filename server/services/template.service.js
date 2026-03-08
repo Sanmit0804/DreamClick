@@ -1,26 +1,76 @@
 const Template = require('../models/template.model');
+const { AppError } = require('../utils/AppError');
 
 class TemplateService {
-    static getTemplates = async () => {
-        return await Template.find();
+    /**
+     * Get all templates, optionally filtered by userId.
+     * Populates uploader's name and avatar for display.
+     */
+    static async getTemplates({ userId } = {}) {
+        const filter = userId ? { userId } : {};
+        return await Template.find(filter)
+            .populate('userId', 'name creatorProfile.avatar')
+            .sort({ createdAt: -1 });
     }
 
-    static getTemplateById = async (templateId) => {
-        return await Template.findById(templateId);
+    /**
+     * Get a single template by its ID.
+     */
+    static async getTemplateById(templateId) {
+        const template = await Template.findById(templateId).populate(
+            'userId',
+            'name creatorProfile.avatar'
+        );
+        if (!template) {
+            throw AppError.notFound('Template not found');
+        }
+        return template;
     }
 
-    static createTemplate = async (data) => {
-        const newTemplate = new Template(data);
-        return await newTemplate.save();
+    /**
+     * Create a new template. Requires the requesting user's ID.
+     */
+    static async createTemplate(data, requestingUserId) {
+        const template = new Template({ ...data, userId: requestingUserId });
+        return await template.save();
     }
 
-    static updateTemplate = async (templateId, data) => {
-        return await Template.findByIdAndUpdate(templateId, data, { new: true, runValidators: true });
+    /**
+     * Update a template. Only the owner or an admin can update.
+     */
+    static async updateTemplate(templateId, data, requestingUser) {
+        const template = await Template.findById(templateId);
+        if (!template) throw AppError.notFound('Template not found');
+
+        const isOwner = template.userId.toString() === requestingUser.id;
+        const isAdmin = requestingUser.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            throw AppError.forbidden('You do not have permission to update this template');
+        }
+
+        Object.assign(template, data);
+        return await template.save();
     }
 
-    static deleteTemplateById = async (templateId) => {
-        return await Template.findByIdAndDelete(templateId);
+    /**
+     * Delete a template.
+     * Only the uploader (owner) or an admin can delete.
+     */
+    static async deleteTemplate(templateId, requestingUser) {
+        const template = await Template.findById(templateId);
+        if (!template) throw AppError.notFound('Template not found');
+
+        const isOwner = template.userId.toString() === requestingUser.id;
+        const isAdmin = requestingUser.role === 'admin';
+
+        if (!isOwner && !isAdmin) {
+            throw AppError.forbidden('You do not have permission to delete this template');
+        }
+
+        await template.deleteOne();
+        return { message: 'Template deleted successfully' };
     }
 }
 
-module.exports = TemplateService
+module.exports = TemplateService;

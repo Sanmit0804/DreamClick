@@ -35,18 +35,18 @@ const signupSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
-    
+
     // Role
     role: z.enum(['end_user', 'content_creator'], {
         message: "Please select a role",
     }),
-    
+
     // Contact Info (Optional)
     phone: z.string().optional().refine((val) => {
         if (!val) return true;
         return /^[6-9]\d{9}$/.test(val);
     }, "Please enter a valid 10-digit Indian phone number"),
-    
+
     // Billing Address (Optional for end_user, but shown for content_creator)
     billingAddress: z.object({
         street: z.string().optional(),
@@ -57,7 +57,7 @@ const signupSchema = z.object({
             return /^\d{6}$/.test(val);
         }, "Please enter a valid 6-digit PIN code"),
     }).optional(),
-    
+
     // Creator Profile (Only for content_creator)
     creatorProfile: z.object({
         bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
@@ -139,14 +139,15 @@ export default function Auth() {
         setIsLoading(true);
         try {
             const response = await authService.login(data);
-            localStorage.setItem('authToken', response.token);
+            // Store as 'token' — used by authService, ProtectedRoute, and template service
+            localStorage.setItem('token', response.token);
             localStorage.setItem('user', JSON.stringify(response.user));
 
             toast.success("Login successful!");
             navigate("/dashboard");
-        } catch (error) {
-            console.error("Login error:", error);
-            toast.error("Login failed. Please check your credentials and try again.");
+        } catch (error: any) {
+            const message = error?.message || "Login failed. Please check your credentials and try again.";
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
@@ -212,7 +213,7 @@ export default function Auth() {
                 </div>
 
 
-            <Card style={{ width: '500px'}} className={deviceType == 'mobile' && !isLoginScreen ? 'mx-4 mt-80 mb-10' : 'mx-4'}>
+                <Card style={{ width: '500px' }} className={deviceType == 'mobile' && !isLoginScreen ? 'mx-4 mt-80 mb-10' : 'mx-4'}>
                     <CardHeader className="text-center px-4 py-4 sm:px-6">
                         <CardTitle className="text-xl sm:text-2xl font-semibold">
                             {isLoginScreen ? "Welcome Back" : "Create Account"}
@@ -352,7 +353,7 @@ export default function Auth() {
                                         {/* Role Selection */}
                                         <div className="grid gap-2">
                                             <Label>Account Type *</Label>
-                                            <RadioGroup 
+                                            <RadioGroup
                                                 value={selectedRole}
                                                 onValueChange={(value) => {
                                                     registerSignup("role").onChange({ target: { name: "role", value } });
@@ -407,7 +408,7 @@ export default function Auth() {
 
                                         <div className="pt-2">
                                             <h3 className="text-sm font-medium mb-3">Billing Address (Optional)</h3>
-                                            
+
                                             <div className="space-y-4">
                                                 {/* Street */}
                                                 <div className="grid gap-2">
@@ -507,7 +508,7 @@ export default function Auth() {
                                                 {/* Social Links */}
                                                 <div className="pt-2">
                                                     <h3 className="text-sm font-medium mb-3">Social Links (Optional)</h3>
-                                                    
+
                                                     <div className="space-y-3">
                                                         <div className="grid gap-2">
                                                             <Label htmlFor="signup-youtube">YouTube</Label>
@@ -566,7 +567,7 @@ export default function Auth() {
                                             Previous
                                         </Button>
                                     )}
-                                    
+
                                     {currentTab === "basic" && (
                                         <Button
                                             type="button"
@@ -592,9 +593,9 @@ export default function Auth() {
                                     )}
 
                                     {(currentTab === "contact" && selectedRole === 'end_user') || currentTab === "additional" ? (
-                                        <Button 
-                                            type="submit" 
-                                            className="flex-1" 
+                                        <Button
+                                            type="submit"
+                                            className="flex-1"
                                             disabled={isLoading}
                                         >
                                             {isLoading ? (
