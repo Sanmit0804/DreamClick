@@ -13,7 +13,7 @@ const About = () => {
         <h1 className="text-3xl font-bold sm:text-4xl">About DreamClick</h1>
 
         <p className="text-base leading-relaxed sm:text-lg sm:leading-relaxed">
-          Welcome to <span className="font-semibold">DreamClick</span> 
+          Welcome to <span className="font-semibold">DreamClick</span>
         </p>
 
         <p className="text-base leading-relaxed sm:text-lg sm:leading-relaxed">

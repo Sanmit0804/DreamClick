@@ -17,6 +17,8 @@ import AddTemplateModal from '@/components/templates/AddTemplateModal';
 import EditTemplateModal from '@/components/templates/EditTemplateModal';
 import templateService from '@/services/template.service';
 import type { VideoTemplate } from '@/types';
+import type { ColumnDef } from '@tanstack/react-table';
+import RenderTable from '@/components/RenderTable';
 
 // ─── Quick Preview ─────────────────────────────────────────────────────────────
 const PreviewModal = ({
@@ -179,6 +181,150 @@ const AdminTemplates = () => {
         }
     };
 
+    // ── Columns for RenderTable ──────────────────────────────────────────────
+    const columns: ColumnDef<VideoTemplate>[] = [
+        {
+            id: 'index',
+            header: '#',
+            cell: (info) => {
+                const table = info.table;
+                const pageIndex = table.getState().pagination.pageIndex;
+                const pageSize = table.getState().pagination.pageSize;
+                return pageIndex * pageSize + info.row.index + 1;
+            },
+            meta: { className: 'w-[50px] text-muted-foreground text-xs' },
+        },
+        {
+            accessorKey: 'templateName',
+            header: 'Template',
+            cell: ({ row }) => {
+                const t = row.original;
+                return (
+                    <div className="max-w-[220px]">
+                        <p className="font-semibold line-clamp-1">{t.templateName}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                            {t.templateDescription}
+                        </p>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: 'templateCategory',
+            header: 'Category',
+            cell: ({ getValue }) => (
+                <Badge variant="outline" className="text-xs font-normal">
+                    {getValue() as string || 'General'}
+                </Badge>
+            ),
+            meta: {
+                className: 'hidden md:table-cell',
+                headerClassName: 'hidden md:table-cell',
+            },
+        },
+        {
+            accessorKey: 'templatePrice',
+            header: 'Price',
+            cell: ({ row }) => {
+                const t = row.original;
+                return (
+                    <div>
+                        <span className="font-bold text-primary">
+                            {t.templatePrice === 0 ? 'Free' : `₹${t.templatePrice}`}
+                        </span>
+                        {t.templateOldPrice && (
+                            <span className="ml-1.5 text-muted-foreground line-through text-xs">
+                                ₹{t.templateOldPrice}
+                            </span>
+                        )}
+                    </div>
+                );
+            },
+            meta: {
+                className: 'hidden sm:table-cell',
+                headerClassName: 'hidden sm:table-cell',
+            },
+        },
+        {
+            id: 'uploader',
+            header: 'Uploader',
+            cell: ({ row }) => {
+                const t = row.original;
+                return typeof t.userId === 'object' ? t.userId.name : '—';
+            },
+            meta: {
+                className: 'hidden lg:table-cell text-muted-foreground text-xs',
+                headerClassName: 'hidden lg:table-cell',
+            },
+        },
+        {
+            accessorKey: 'createdAt',
+            header: 'Date',
+            cell: ({ getValue }) => (
+                <span className="whitespace-nowrap">
+                    {new Date(getValue() as string).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                    })}
+                </span>
+            ),
+            meta: {
+                className: 'hidden xl:table-cell text-muted-foreground text-xs',
+                headerClassName: 'hidden xl:table-cell',
+            },
+        },
+        {
+            id: 'actions',
+            header: () => <div className="text-center">Actions</div>,
+            cell: ({ row }) => {
+                const t = row.original;
+                const isBeingDeleted = deletingId === t._id;
+                return (
+                    <div className="flex items-center justify-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            title="Preview"
+                            onClick={() => setPreviewTarget(t)}
+                            disabled={isBeingDeleted}
+                        >
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-500 hover:bg-blue-500/10"
+                            title="Edit"
+                            onClick={() => setEditTarget(t)}
+                            disabled={isBeingDeleted}
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            title="Delete"
+                            disabled={isBeingDeleted}
+                            onClick={() => handleDelete(t._id, t.templateName)}
+                        >
+                            {isBeingDeleted ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Trash2 className="h-4 w-4" />
+                            )}
+                        </Button>
+                    </div>
+                );
+            },
+            meta: {
+                className: 'text-right',
+            },
+        },
+    ];
+
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
         <div className="space-y-5">
@@ -218,11 +364,15 @@ const AdminTemplates = () => {
             </div>
 
             {/* ── Table ───────────────────────────────────────────────────────── */}
-            {isLoading ? (
-                <div className="flex items-center justify-center py-24">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-            ) : filtered.length === 0 ? (
+            {isLoading || filtered.length > 0 ? (
+                <RenderTable
+                    columns={columns}
+                    data={filtered}
+                    loading={isLoading}
+                    pagination={true}
+                    pageSize={10}
+                />
+            ) : (
                 <div className="flex flex-col items-center justify-center py-24 text-center border rounded-xl">
                     <Film className="h-12 w-12 text-muted-foreground/40 mb-3" />
                     <p className="text-muted-foreground font-medium">
@@ -238,134 +388,8 @@ const AdminTemplates = () => {
                         </Button>
                     )}
                 </div>
-            ) : (
-                <div className="rounded-xl border overflow-hidden">
-                    <table className="w-full text-sm">
-                        <thead className="bg-muted/60 border-b">
-                            <tr>
-                                <th className="text-left px-4 py-3 font-medium text-muted-foreground">#</th>
-                                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Template</th>
-                                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Category</th>
-                                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Price</th>
-                                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Uploader</th>
-                                <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden xl:table-cell">Date</th>
-                                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {filtered.map((t, idx) => {
-                                const uploaderName =
-                                    typeof t.userId === 'object' ? t.userId.name : '—';
-                                const isBeingDeleted = deletingId === t._id;
-
-                                return (
-                                    <tr
-                                        key={t._id}
-                                        className={`transition-colors ${isBeingDeleted ? 'opacity-50' : 'hover:bg-muted/30'}`}
-                                    >
-                                        {/* Index */}
-                                        <td className="px-4 py-3 text-muted-foreground text-xs">
-                                            {idx + 1}
-                                        </td>
-
-                                        {/* Name + Description */}
-                                        <td className="px-4 py-3 max-w-[220px]">
-                                            <p className="font-semibold line-clamp-1">{t.templateName}</p>
-                                            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                                                {t.templateDescription}
-                                            </p>
-                                        </td>
-
-                                        {/* Category */}
-                                        <td className="px-4 py-3 hidden md:table-cell">
-                                            <Badge variant="outline" className="text-xs font-normal">
-                                                {t.templateCategory || 'General'}
-                                            </Badge>
-                                        </td>
-
-                                        {/* Price */}
-                                        <td className="px-4 py-3 hidden sm:table-cell">
-                                            <span className="font-bold text-primary">
-                                                {t.templatePrice === 0 ? 'Free' : `₹${t.templatePrice}`}
-                                            </span>
-                                            {t.templateOldPrice && (
-                                                <span className="ml-1.5 text-muted-foreground line-through text-xs">
-                                                    ₹{t.templateOldPrice}
-                                                </span>
-                                            )}
-                                        </td>
-
-                                        {/* Uploader */}
-                                        <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs">
-                                            {uploaderName}
-                                        </td>
-
-                                        {/* Date */}
-                                        <td className="px-4 py-3 hidden xl:table-cell text-muted-foreground text-xs whitespace-nowrap">
-                                            {new Date(t.createdAt).toLocaleDateString('en-IN', {
-                                                day: 'numeric',
-                                                month: 'short',
-                                                year: 'numeric',
-                                            })}
-                                        </td>
-
-                                        {/* Actions: View | Edit | Delete */}
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                {/* View / Preview */}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                                    title="Preview"
-                                                    onClick={() => setPreviewTarget(t)}
-                                                    disabled={isBeingDeleted}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-
-                                                {/* Edit */}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-blue-500 hover:bg-blue-500/10"
-                                                    title="Edit"
-                                                    onClick={() => setEditTarget(t)}
-                                                    disabled={isBeingDeleted}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-
-                                                {/* Delete */}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                                    title="Delete"
-                                                    disabled={isBeingDeleted}
-                                                    onClick={() => handleDelete(t._id, t.templateName)}
-                                                >
-                                                    {isBeingDeleted ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <Trash2 className="h-4 w-4" />
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-
-                    {/* Footer row */}
-                    <div className="bg-muted/30 border-t px-4 py-2 text-xs text-muted-foreground">
-                        Showing {filtered.length} of {templates.length} templates
-                        {searchQuery && ` matching "${searchQuery}"`}
-                    </div>
-                </div>
             )}
+
 
             {/* ── Modals ──────────────────────────────────────────────────────── */}
 

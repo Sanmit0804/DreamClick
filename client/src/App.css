@@ -1,5 +1,5 @@
 /* Hide scrollbar for WebKit browsers */
 ::-webkit-scrollbar {
-  width: 0;
-  background: transparent;
+    width: 0;
+    background: transparent;
 }

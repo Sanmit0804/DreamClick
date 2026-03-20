@@ -130,8 +130,8 @@ const VideoTemplates = () => {
             <button
               onClick={() => setFilter('all')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${filter === 'all'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
                 }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
@@ -146,8 +146,8 @@ const VideoTemplates = () => {
               <button
                 onClick={() => setFilter('mine')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${filter === 'mine'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 <User2 className="h-3.5 w-3.5" />

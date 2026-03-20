@@ -45,7 +45,7 @@ const Contact = () => {
             <button
               onClick={(e) => {
                 e.stopPropagation(); // Prevent triggering the mailto link
-                handleCopy();       
+                handleCopy();
               }}
               className="flex items-center gap-2 text-xs sm:text-sm text-primary font-medium hover:underline"
             >
