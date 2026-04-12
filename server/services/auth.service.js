@@ -32,6 +32,38 @@ class AuthService {
         const token = signToken(user);
         return { user, token };
     }
+
+    async emailLogin(email, guestCart = [], guestFavorites = []) {
+        if (!email) throw AppError.badRequest('Email is required');
+        
+        // Find existing user
+        let user = await User.findOne({ email });
+        
+        if (!user) {
+            // Create user automatically
+            user = new User({
+                name: email.split('@')[0],
+                email,
+                authProvider: 'local' // using local because we bypass password anyways; or we could use 'email' if we add to schema, but user.model specifies 'local', 'google', 'github'
+            });
+            await user.save({ validateBeforeSave: false }); // bypass password validation
+        }
+
+        // Merge cart and favorites
+        if (guestCart.length > 0) {
+            const uniqueCart = [...new Set([...(user.cart || []).map(id => id.toString()), ...guestCart])];
+            user.cart = uniqueCart;
+        }
+        if (guestFavorites.length > 0) {
+            const uniqueFavs = [...new Set([...(user.favorites || []).map(id => id.toString()), ...guestFavorites])];
+            user.favorites = uniqueFavs;
+        }
+        
+        await user.save({ validateBeforeSave: false });
+
+        const token = signToken(user);
+        return { user, token };
+    }
 }
 
 module.exports = new AuthService();

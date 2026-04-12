@@ -32,6 +32,20 @@ class userController {
         res.status(200).json(updatedUser);
     });
 
+    static toggleCart = catchAsync(async (req, res) => {
+        const userId = req.user.id;
+        const { templateId } = req.body;
+        const cart = await userService.toggleCart(userId, templateId);
+        res.status(200).json({ cart });
+    });
+
+    static toggleFavorite = catchAsync(async (req, res) => {
+        const userId = req.user.id;
+        const { templateId } = req.body;
+        const favorites = await userService.toggleFavorite(userId, templateId);
+        res.status(200).json({ favorites });
+    });
+
     static deleteUserById = catchAsync(async (req, res) => {
         const userId = req.params.id;
         const result = await userService.deleteUserById(userId);

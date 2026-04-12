@@ -71,6 +71,36 @@ class TemplateService {
         await template.deleteOne();
         return { message: 'Template deleted successfully' };
     }
+
+    static async purchaseTemplate(templateId, requestingUser) {
+        const User = require('../models/user.model');
+        const user = await User.findById(requestingUser.id);
+        if (!user) throw AppError.notFound('User not found');
+
+        const template = await Template.findById(templateId);
+        if (!template) throw AppError.notFound('Template not found');
+
+        // Check if already purchased
+        const alreadyPurchased = user.purchases.find(p => p.templateId.toString() === templateId);
+        if (alreadyPurchased) throw AppError.badRequest('You have already purchased this template');
+
+        user.purchases.push({
+            templateId,
+            amount: template.templatePrice || 0,
+            paymentStatus: 'captured', // Mock payment
+            downloadToken: 'mock-token-' + Date.now()
+        });
+
+        // Remove from cart if it was there
+        user.cart = user.cart.filter(id => id.toString() !== templateId);
+
+        await user.save({ validateBeforeSave: false });
+
+        // Mock sending email
+        console.log(`[Email] Sending download link for template ${template.templateName} to ${user.email}`);
+
+        return { message: 'Purchase successful', downloadToken: user.purchases[user.purchases.length - 1].downloadToken };
+    }
 }
 
 module.exports = TemplateService;

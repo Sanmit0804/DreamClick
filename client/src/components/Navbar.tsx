@@ -8,18 +8,37 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
-import { LogIn, LogOut, Menu, UserPlus } from "lucide-react";
+import { LogIn, LogOut, Menu, UserPlus, ShoppingCart, Heart } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTrigger
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import useAuth from "@/hooks/useAuth";
+import useCart from "@/hooks/useCart";
+import useFavorites from "@/hooks/useFavorites";
+import authService from "@/services/auth";
+
+/** Tiny animated count badge — pure CSS, always visible */
+const CountBadge = ({ count }: { count: number }) => {
+  if (count <= 0) return null;
+  return (
+    <span
+      key={count}
+      className="absolute -top-1.5 -right-1.5 bg-white text-black text-[10px] font-black
+        min-w-[18px] h-[18px] px-[3px] rounded-full flex items-center justify-center
+        leading-none z-50 shadow-md pointer-events-none
+        animate-[navBadgePop_0.35s_cubic-bezier(.175,.885,.32,1.275)_both]"
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+};
 
 const Navbar = () => {
   const location = useLocation();
@@ -28,8 +47,9 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   const { user: currentUser } = useAuth();
+  const { cart } = useCart();
+  const { favorites } = useFavorites();
 
-  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
@@ -37,8 +57,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    authService.logout();
     navigate("/login");
   };
 
@@ -53,62 +72,44 @@ const Navbar = () => {
   const getLinkClass = (path: string) =>
     cn(
       "transition-colors hover:text-primary",
-      location.pathname === path
-        ? "text-primary font-semibold"
-        : "text-foreground/80"
+      location.pathname === path ? "text-primary font-semibold" : "text-foreground/80"
     );
 
-  // Dynamic navbar classes - FIXED FOR LIGHT MODE
   const navbarClasses = cn(
-    "w-full px-4 sm:px-8 py-3 flex items-center justify-between relative z-50 transition-all duration-300",
-    "sticky top-0",
-    // Background that works in BOTH modes
+    "w-full px-4 sm:px-6 py-3 flex items-center justify-between relative z-50 transition-all duration-300 sticky top-0",
     isScrolled
-      ? "bg-background/50 backdrop-blur-sm"
-      : "bg-transparent/80 backdrop-blur-sm border-transparent"
+      ? "bg-background/60 backdrop-blur-md"
+      : "bg-transparent backdrop-blur-sm border-transparent"
   );
 
-  // Text classes that work in BOTH modes
   const textClasses = cn(
     "transition-colors duration-300",
     isScrolled ? "text-foreground" : "text-foreground/90"
   );
 
-  // User badge classes - FIXED FOR LIGHT MODE
   const userBadgeClasses = cn(
-    "cursor-pointer px-4 py-1 rounded-full font-medium text-sm transition-all duration-300",
-    isScrolled
-      ? "bg-foreground/10 text-foreground"
-      : "bg-foreground/10 text-foreground/90"
+    "cursor-pointer px-3 py-1 rounded-full font-medium text-sm transition-all duration-300",
+    "bg-foreground/10 text-foreground/90"
   );
 
   return (
     <nav className={navbarClasses}>
       {/* Logo */}
       <div
-        className={cn(
-          "text-2xl font-bold tracking-tight cursor-pointer md:absolute md:left-8",
-          textClasses
-        )}
+        className={cn("text-xl font-bold tracking-tight cursor-pointer", textClasses)}
         onClick={() => navigate("/dashboard")}
       >
         Dream Click
       </div>
 
-      {/* Desktop Menu - Centered */}
+      {/* Desktop Menu — centered */}
       <div className="hidden md:flex items-center justify-center flex-1">
         <NavigationMenu>
           <NavigationMenuList className="flex gap-6">
             {menuItems.map((item) => (
               <NavigationMenuItem key={item.path}>
                 <NavigationMenuLink asChild>
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      getLinkClass(item.path),
-                      textClasses
-                    )}
-                  >
+                  <Link to={item.path} className={cn(getLinkClass(item.path), textClasses)}>
                     {item.label}
                   </Link>
                 </NavigationMenuLink>
@@ -118,12 +119,9 @@ const Navbar = () => {
         </NavigationMenu>
       </div>
 
-      {/* Desktop Right Side Items */}
-      <div className="hidden md:flex items-center gap-4 absolute right-8">
-        <span
-          className={userBadgeClasses}
-          onClick={() => navigate('/admin')}
-        >
+      {/* Desktop Right Actions */}
+      <div className="hidden md:flex items-center gap-2">
+        <span className={userBadgeClasses} onClick={() => navigate("/admin")}>
           {currentUser?.name ?? "Guest"}
         </span>
 
@@ -131,47 +129,78 @@ const Navbar = () => {
 
         <button
           onClick={handleLogout}
-          className={cn(
-            "text-sm font-medium",
-            textClasses,
-            "hover:text-red-500 transition-colors duration-300"
-          )}
+          className={cn("text-sm font-medium px-2", textClasses, "hover:text-red-500 transition-colors")}
         >
-          {currentUser?.name ? 'Logout' : 'Login'}
+          {currentUser?.name ? "Logout" : "Login"}
+        </button>
+
+        {/* Favorites */}
+        <button
+          onClick={() => navigate("/favorites")}
+          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+          title="Favorites"
+        >
+          <Heart className="h-5 w-5" />
+          <CountBadge count={favorites.length} />
+        </button>
+
+        {/* Cart */}
+        <button
+          onClick={() => navigate("/cart")}
+          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+          title="Cart"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          <CountBadge count={cart.length} />
         </button>
       </div>
 
-      {/* Mobile Menu Button */}
-      <div className="md:hidden flex items-center gap-2">
+      {/* ── Mobile Right Area ─── */}
+      <div className="md:hidden flex items-center gap-1">
+        {/* Favorites — always visible on mobile navbar */}
+        <button
+          onClick={() => navigate("/favorites")}
+          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+          title="Favorites"
+        >
+          <Heart className="h-5 w-5" />
+          <CountBadge count={favorites.length} />
+        </button>
+
+        {/* Cart — always visible on mobile navbar */}
+        <button
+          onClick={() => navigate("/cart")}
+          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+          title="Cart"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          <CountBadge count={cart.length} />
+        </button>
+
         <ModeToggle />
 
-        {/* Navigation Sheet */}
+        {/* Hamburger Sheet */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className={cn(
-                "md:hidden",
-                textClasses,
-                "hover:bg-accent/50 transition-all duration-300"
-              )}
+              className={cn("hover:bg-accent/50 transition-all", textClasses)}
             >
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent
-            side="right"
-            className="w-[85vw] max-w-sm sm:w-[540px] pr-0"
-          >
+          <SheetContent side="right" className="w-[80vw] max-w-xs pr-0">
             <div className="flex flex-col h-full">
-              <SheetHeader className="text-left px-6">
-              </SheetHeader>
+              <SheetHeader className="text-left px-6" />
 
-              {/* User Info Section */}
+              {/* User Info */}
               <div className="px-6 py-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50" onClick={() => navigate('/admin')}>
+                <div
+                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer"
+                  onClick={() => { navigate("/admin"); setMobileMenuOpen(false); }}
+                >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={currentUser?.creatorProfile?.avatar} alt={currentUser?.name} />
                     <AvatarFallback className="bg-primary/10 text-primary">
@@ -179,11 +208,9 @@ const Navbar = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">
-                      {currentUser?.name ?? "Guest User"}
-                    </p>
+                    <p className="text-sm font-semibold truncate">{currentUser?.name ?? "Guest User"}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {currentUser?.email ?? "Welcome to our app!"}
+                      {currentUser?.email ?? "Welcome to DreamClick!"}
                     </p>
                   </div>
                 </div>
@@ -191,28 +218,21 @@ const Navbar = () => {
 
               <Separator />
 
-              {/* Navigation Links */}
-              <nav className="flex-1 px-3 py-4">
+              {/* Nav Links — only page nav, NO cart/favorites here */}
+              <nav className="flex-1 px-3 py-4 overflow-y-auto">
                 <div className="space-y-1">
                   {menuItems.map((item, index) => (
                     <Button
                       key={item.path}
                       variant={location.pathname === item.path ? "secondary" : "ghost"}
                       className="w-full justify-start gap-3 h-12 px-3"
-                      onClick={() => {
-                        navigate(item.path);
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={() => { navigate(item.path); setMobileMenuOpen(false); }}
                     >
-                      <div className={`w-2 h-2 rounded-full ${location.pathname === item.path
-                        ? 'bg-primary'
-                        : 'bg-muted-foreground/30'
+                      <div className={`w-2 h-2 rounded-full ${location.pathname === item.path ? "bg-primary" : "bg-muted-foreground/30"
                         }`} />
                       <span className="flex-1 text-left">{item.label}</span>
                       {index === 2 && (
-                        <Badge variant="outline" className="ml-2 text-xs">
-                          New
-                        </Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">New</Badge>
                       )}
                     </Button>
                   ))}
@@ -221,28 +241,19 @@ const Navbar = () => {
 
               <Separator />
 
-              {/* Action Section */}
-              <div className="p-4 space-y-3">
+              {/* Auth Actions */}
+              <div className="p-4 space-y-2">
                 {currentUser?.name ? (
-                  <div className="space-y-2">
-                    <Button
-                      variant="destructive"
-                      className="w-full gap-2"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </Button>
-                  </div>
+                  <Button variant="destructive" className="w-full gap-2" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
                 ) : (
-                  <div className="space-y-2">
+                  <>
                     <Button
                       variant="default"
                       className="w-full gap-2"
-                      onClick={() => {
-                        navigate('/login');
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={() => { navigate("/login"); setMobileMenuOpen(false); }}
                     >
                       <LogIn className="h-4 w-4" />
                       Sign In
@@ -250,15 +261,12 @@ const Navbar = () => {
                     <Button
                       variant="outline"
                       className="w-full gap-2"
-                      onClick={() => {
-                        navigate('/login?mode=signup');
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={() => { navigate("/login?mode=signup"); setMobileMenuOpen(false); }}
                     >
                       <UserPlus className="h-4 w-4" />
                       Create Account
                     </Button>
-                  </div>
+                  </>
                 )}
               </div>
             </div>

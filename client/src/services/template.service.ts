@@ -54,6 +54,12 @@ class TemplateService {
         const res = await api.patch<ApiResponse<VideoTemplate>>(`/api/templates/${id}`, payload);
         return res.data.data;
     }
+
+    /** Purchase a template (requires auth). */
+    async purchaseTemplate(id: string): Promise<any> {
+        const res = await api.post(`/api/templates/${id}/purchase`);
+        return res.data;
+    }
 }
 
 const templateService = new TemplateService();

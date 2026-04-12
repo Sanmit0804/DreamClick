@@ -12,6 +12,16 @@ class AuthController {
         const user = await authService.signup(req.body);
         res.status(201).json({ message: 'User created successfully', user });
     });
+
+    static emailLogin = catchAsync(async (req, res) => {
+        const { email, guestCart, guestFavorites } = req.body;
+        const result = await authService.emailLogin(email, guestCart, guestFavorites);
+        res.status(200).json(result);
+    });
+
+    static verify = catchAsync(async (req, res) => {
+        res.status(200).json({ valid: true, user: req.user });
+    });
 }
 
 module.exports = AuthController;

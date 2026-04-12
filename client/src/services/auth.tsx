@@ -70,6 +70,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Auto logout if 401 response
             localStorage.removeItem("token")
+            localStorage.removeItem("user")
             window.location.href = '/login'
         }
         
@@ -79,7 +80,6 @@ api.interceptors.response.use(
 
 class AuthService {
     async login(data: LoginFormData): Promise<AuthResponse> {
-        // Validate data before sending
         const parsed = loginSchema.safeParse(data)
         if (!parsed.success) {
             throw new Error(parsed.error.issues[0]?.message || 'Validation failed')
@@ -90,12 +90,13 @@ class AuthService {
                 email: data.email,
                 password: data.password,
             })
-            
-            // Save token
+
             if (response.data.token) {
                 this.setToken(response.data.token)
+                localStorage.setItem('user', JSON.stringify(response.data.user))
+                window.dispatchEvent(new Event('dreamclick:auth-change'))
             }
-            
+
             return response.data
         } catch (error: any) {
             if (axios.isAxiosError<ApiError>(error)) {
@@ -114,12 +115,13 @@ class AuthService {
 
         try {
             const response = await api.post<AuthResponse>('/auth/signup', data)
-            
-            // Save token
+
             if (response.data.token) {
                 this.setToken(response.data.token)
+                localStorage.setItem('user', JSON.stringify(response.data.user))
+                window.dispatchEvent(new Event('dreamclick:auth-change'))
             }
-            
+
             return response.data
         } catch (error: any) {
             if (axios.isAxiosError<ApiError>(error)) {
@@ -130,10 +132,30 @@ class AuthService {
         }
     }
 
+    async emailLogin(email: string, guestCart: string[] = [], guestFavorites: string[] = []): Promise<AuthResponse> {
+        try {
+            const response = await api.post<AuthResponse>('/auth/email-login', { email, guestCart, guestFavorites })
+            if (response.data.token) {
+                this.setToken(response.data.token)
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+                localStorage.removeItem('guestCart');
+                localStorage.removeItem('guestFavorites');
+                window.dispatchEvent(new Event('dreamclick:auth-change'));
+            }
+            return response.data
+        } catch (error: any) {
+            if (axios.isAxiosError<ApiError>(error)) {
+                const message = error.response?.data?.message || error.response?.data?.error || 'Login failed'
+                throw new Error(message)
+            }
+            throw error
+        }
+    }
+
     logout(): void {
         localStorage.removeItem("token")
-        // Optional: Call logout endpoint if you have one
-        // await api.post('/auth/logout')
+        localStorage.removeItem("user")
+        window.dispatchEvent(new Event('dreamclick:auth-change'))
     }
 
     getToken(): string | null {
@@ -148,14 +170,14 @@ class AuthService {
         return !!this.getToken()
     }
 
-    // Optional: Get current user info if you have a /me endpoint
-    async getCurrentUser() {
+    // Verify token on app load
+    async verify() {
         if (!this.isAuthenticated()) {
             return null
         }
         
         try {
-            const response = await api.get('/auth/me')
+            const response = await api.get('/auth/verify') 
             return response.data
         } catch (error) {
             this.logout()

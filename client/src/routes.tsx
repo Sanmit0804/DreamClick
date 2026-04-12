@@ -12,6 +12,8 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Images = lazy(() => import('./pages/Images'));
 const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Favorites = lazy(() => import('./pages/Favorites'));
 const VideoTemplates = lazy(() => import('./pages/Templates/VideoTemplates'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -25,6 +27,8 @@ const openRoutes = [
     { path: '/dashboard', element: <Dashboard /> },
     { path: '/explore', element: <Images /> },
     { path: '/video-templates', element: <VideoTemplates /> },
+    { path: '/cart', element: <Cart /> },
+    { path: '/favorites', element: <Favorites /> },
     { path: '/about', element: <About /> },
     { path: '/contact', element: <Contact /> },
 ];
