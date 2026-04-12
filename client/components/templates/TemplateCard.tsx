@@ -36,7 +36,7 @@ const ActionBtn: React.FC<{
     <motion.div
         whileTap={{ scale: 0.82 }}
         animate={active ? { scale: [1, 1.22, 1] } : { scale: 1 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 12 }}
+        transition={active ? { duration: 0.35, ease: 'easeOut' } : { duration: 0.2 }}
     >
         <Button
             variant="secondary"
