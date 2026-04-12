@@ -92,18 +92,23 @@ const Navbar = () => {
     "bg-foreground/10 text-foreground/90"
   );
 
+  const showFav = favorites.length > 0 || location.pathname === "/video-templates";
+  const showCart = cart.length > 0 || location.pathname === "/video-templates";
+
   return (
     <nav className={navbarClasses}>
-      {/* Logo */}
-      <div
-        className={cn("text-xl font-bold tracking-tight cursor-pointer", textClasses)}
-        onClick={() => navigate("/dashboard")}
-      >
-        Dream Click
+      {/* ── Left Side (Logo) ── */}
+      <div className="flex items-center md:flex-1">
+        <div
+          className={cn("text-xl font-bold tracking-tight cursor-pointer", textClasses)}
+          onClick={() => navigate("/dashboard")}
+        >
+          Dream Click
+        </div>
       </div>
 
-      {/* Desktop Menu — centered */}
-      <div className="hidden md:flex items-center justify-center flex-1">
+      {/* ── Center (Desktop Menu) ── */}
+      <div className="hidden md:flex items-center justify-center">
         <NavigationMenu>
           <NavigationMenuList className="flex gap-6">
             {menuItems.map((item) => (
@@ -119,8 +124,8 @@ const Navbar = () => {
         </NavigationMenu>
       </div>
 
-      {/* Desktop Right Actions */}
-      <div className="hidden md:flex items-center gap-2">
+      {/* ── Right Side (Desktop Actions) ── */}
+      <div className="hidden md:flex items-center justify-end gap-2 md:flex-1">
         <span className={userBadgeClasses} onClick={() => navigate("/admin")}>
           {currentUser?.name ?? "Guest"}
         </span>
@@ -135,47 +140,55 @@ const Navbar = () => {
         </button>
 
         {/* Favorites */}
-        <button
-          onClick={() => navigate("/favorites")}
-          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
-          title="Favorites"
-        >
-          <Heart className="h-5 w-5" />
-          <CountBadge count={favorites.length} />
-        </button>
+        {showFav && (
+          <button
+            onClick={() => navigate("/favorites")}
+            className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+            title="Favorites"
+          >
+            <Heart className="h-5 w-5" />
+            <CountBadge count={favorites.length} />
+          </button>
+        )}
 
         {/* Cart */}
-        <button
-          onClick={() => navigate("/cart")}
-          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
-          title="Cart"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          <CountBadge count={cart.length} />
-        </button>
+        {showCart && (
+          <button
+            onClick={() => navigate("/cart")}
+            className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+            title="Cart"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            <CountBadge count={cart.length} />
+          </button>
+        )}
       </div>
 
       {/* ── Mobile Right Area ─── */}
-      <div className="md:hidden flex items-center gap-1">
-        {/* Favorites — always visible on mobile navbar */}
-        <button
-          onClick={() => navigate("/favorites")}
-          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
-          title="Favorites"
-        >
-          <Heart className="h-5 w-5" />
-          <CountBadge count={favorites.length} />
-        </button>
+      <div className="md:hidden flex items-center justify-end gap-1">
+        {/* Favorites — always visible on mobile navbar if not empty or on templates page */}
+        {showFav && (
+          <button
+            onClick={() => navigate("/favorites")}
+            className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+            title="Favorites"
+          >
+            <Heart className="h-5 w-5" />
+            <CountBadge count={favorites.length} />
+          </button>
+        )}
 
-        {/* Cart — always visible on mobile navbar */}
-        <button
-          onClick={() => navigate("/cart")}
-          className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
-          title="Cart"
-        >
-          <ShoppingCart className="h-5 w-5" />
-          <CountBadge count={cart.length} />
-        </button>
+        {/* Cart — always visible on mobile navbar if not empty or on templates page */}
+        {showCart && (
+          <button
+            onClick={() => navigate("/cart")}
+            className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
+            title="Cart"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            <CountBadge count={cart.length} />
+          </button>
+        )}
 
         <ModeToggle />
 
