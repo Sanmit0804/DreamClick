@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Instagram, Copy } from "lucide-react";
 
@@ -17,13 +17,8 @@ const Contact = () => {
   };
 
   return (
-    <div className="text-foreground flex items-center justify-center px-4 py-16 sm:px-6 sm:py-20 transition-colors duration-300">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-3xl text-center space-y-6 sm:space-y-8"
-      >
+    <div className="min-h-[calc(100vh-8rem)] bg-background text-foreground flex items-center justify-center px-4 py-16 sm:px-6 sm:py-20 transition-colors duration-300">
+      <div className="max-w-3xl text-center space-y-6 sm:space-y-8 animate-page-enter">
         <h1 className="text-3xl font-bold sm:text-4xl">Get in Touch</h1>
 
         <p className="text-base text-muted-foreground leading-relaxed sm:text-lg">
@@ -71,7 +66,7 @@ const Contact = () => {
         <p className="pt-8 sm:pt-10 text-xs sm:text-sm text-muted-foreground italic">
           "Let's create something beautiful together."
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 };
