@@ -7,6 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import useAuth from '@/hooks/useAuth';
 import type { VideoTemplate } from '@/types';
+import authService from '@/services/auth';
+import templateService from '@/services/template.service';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
 
 interface VideoTemplateModalProps {
   video: VideoTemplate;
@@ -30,7 +34,11 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({
   onDelete,
 }) => {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  
+  const [showEmailPrompt, setShowEmailPrompt] = React.useState(false);
+  const [email, setEmail] = React.useState('');
+  const [isProcessing, setIsProcessing] = React.useState(false);
 
   const uploaderName =
     typeof video.userId === 'object' ? video.userId.name : null;
@@ -38,10 +46,55 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({
   const showDelete = onDelete && canDelete(video, user?._id);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setShowEmailPrompt(false);
+      setEmail('');
+      return;
+    }
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
+
+  const handlePurchase = async () => {
+    if (!isAuthenticated) {
+        setShowEmailPrompt(true);
+        return;
+    }
+    
+    setIsProcessing(true);
+    try {
+        await templateService.purchaseTemplate(video._id);
+        toast.success(`Purchase successful! A download link has been sent to ${user?.email}.`);
+        onClose();
+    } catch (err: any) {
+        toast.error(err.response?.data?.error?.message || 'Failed to complete purchase.');
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
+  const handleEmailLogin = async () => {
+    if (!email) {
+        toast.error('Please enter your email.');
+        return;
+    }
+    setIsProcessing(true);
+    try {
+        const guestCart = JSON.parse(localStorage.getItem('guestCart') || '[]');
+        const guestFavs = JSON.parse(localStorage.getItem('guestFavorites') || '[]');
+        await authService.emailLogin(email, guestCart, guestFavs);
+        toast.success('Logged in successfully! Proceeding with purchase...');
+        setShowEmailPrompt(false);
+        // Page reloads or state updates will occur depending on implementation
+        // For safe measure, run handlePurchase after a short delay so auth state updates
+        setTimeout(() => {
+            window.location.reload(); // Quick refresh to update the global auth state before continuing
+        }, 1000);
+    } catch (err) {
+        toast.error('Login failed.');
+        setIsProcessing(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -190,9 +243,30 @@ const VideoTemplateModal: React.FC<VideoTemplateModalProps> = ({
 
             {/* CTA */}
             <div className="mt-auto pt-2">
-              <Button className="w-full py-5 text-base font-semibold shadow-md hover:shadow-lg transition-shadow">
-                {video.templatePrice === 0 ? '⬇ Download Free' : '🛒 Buy Now'}
-              </Button>
+              {showEmailPrompt ? (
+                  <div className="flex flex-col gap-3 p-4 bg-muted/50 rounded-xl border">
+                      <p className="text-sm font-medium">Please enter your email to continue</p>
+                      <Input 
+                        placeholder="your@email.com" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        disabled={isProcessing}
+                      />
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="flex-1" onClick={() => setShowEmailPrompt(false)} disabled={isProcessing}>Cancel</Button>
+                        <Button className="flex-1" onClick={handleEmailLogin} disabled={isProcessing}>Continue</Button>
+                      </div>
+                  </div>
+              ) : (
+                  <Button 
+                    className="w-full py-5 text-base font-semibold shadow-md hover:shadow-lg transition-shadow"
+                    onClick={handlePurchase}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? 'Processing...' : (video.templatePrice === 0 ? '⬇ Download Free' : '🛒 Buy Now')}
+                  </Button>
+              )}
             </div>
           </div>
         </CardContent>

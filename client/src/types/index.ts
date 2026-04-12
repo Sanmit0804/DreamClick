@@ -32,6 +32,8 @@ export interface AuthUser {
     creatorProfile?: {
         avatar?: string;
     };
+    cart?: string[];
+    favorites?: string[];
 }
 
 export interface ApiResponse<T> {

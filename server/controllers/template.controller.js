@@ -45,6 +45,11 @@ class TemplateController {
         const result = await TemplateService.deleteTemplate(req.params.id, req.user);
         res.status(200).json({ success: true, ...result });
     });
+
+    static purchaseTemplate = catchAsync(async (req, res) => {
+        const result = await TemplateService.purchaseTemplate(req.params.id, req.user);
+        res.status(200).json({ success: true, ...result });
+    });
 }
 
 module.exports = TemplateController;

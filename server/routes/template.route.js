@@ -18,6 +18,7 @@ router.get('/:id', templateController.getTemplateById);
 
 // ── Protected: must be logged in ────────────────────────────────────────────
 router.post('/', authenticate, templateController.createTemplate);
+router.post('/:id/purchase', authenticate, templateController.purchaseTemplate);
 router.patch('/:id', authenticate, templateController.updateTemplate);
 router.delete('/:id', authenticate, templateController.deleteTemplate);
 

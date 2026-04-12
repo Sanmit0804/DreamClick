@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface BackButtonProps {
-    children: React.ReactNode
+    children?: React.ReactNode
     fallbackPath?: string
     className?: string
 }
