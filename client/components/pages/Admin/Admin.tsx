@@ -13,12 +13,13 @@ import {
 } from '@/components/ui/breadcrumb';
 import {
     BarChart3, Settings, Users, Package, ShoppingCart, Home,
-    ChevronRight, Plus, List, Edit, Film, Globe
+    ChevronRight, Plus, List, Edit, Film, Globe, Youtube
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ManageUser from './UserManagement/ManageUser';
 import EditUser from './UserManagement/SingleUser';
 import AdminTemplates from './TemplateManagement/AdminTemplates';
+import YoutubeAdmin from './Youtube/YoutubeAdmin';
 import useDeviceType from '@/hooks/useDeviceType';
 
 interface MenuItem {
@@ -103,6 +104,12 @@ const Admin = () => {
             ],
         },
         {
+            id: 'youtube',
+            icon: Youtube,
+            label: 'YouTube',
+            path: '/admin/youtube',
+        },
+        {
             id: 'settings',
             icon: Settings,
             label: 'Settings',
@@ -175,6 +182,8 @@ const Admin = () => {
             case '/admin/settings/general': return <PageTransition pathKey={pathname}><GeneralSettings /></PageTransition>;
             
             case '/admin/templates': return <PageTransition pathKey={pathname}><AdminTemplates /></PageTransition>;
+            
+            case '/admin/youtube': return <PageTransition pathKey={pathname}><YoutubeAdmin /></PageTransition>;
             
             case '/admin': 
             default: 

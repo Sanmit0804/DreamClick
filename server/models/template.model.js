@@ -24,6 +24,14 @@ const templateSchema = new mongoose.Schema(
             trim: true,
             default: null,
         },
+        youtubeVideoId: {
+            type: String,
+            default: null,
+        },
+        youtubeVideoUrl: {
+            type: String,
+            default: null,
+        },
         templatePrice: {
             type: Number,
             required: [true, 'Price is required'],

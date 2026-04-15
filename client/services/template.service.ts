@@ -60,6 +60,16 @@ class TemplateService {
         const res = await api.post(`/api/templates/${id}/purchase`);
         return res.data;
     }
+
+    /** Upload a raw file to the backend, returns the file URL. */
+    async uploadFile(file: File): Promise<string> {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await api.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return res.data.fileUrl; // from upload.route.js
+    }
 }
 
 const templateService = new TemplateService();

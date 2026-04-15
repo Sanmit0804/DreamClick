@@ -1,5 +1,6 @@
 const Template = require('../models/template.model');
 const { AppError } = require('../utils/AppError');
+const { enqueueYoutubeUpload } = require('./youtubeQueue.service');
 
 class TemplateService {
     /**
@@ -30,10 +31,40 @@ class TemplateService {
 
     /**
      * Create a new template. Requires the requesting user's ID.
+     * After saving, automatically enqueues a YouTube Shorts upload.
      */
     static async createTemplate(data, requestingUserId) {
         const template = new Template({ ...data, userId: requestingUserId });
-        return await template.save();
+        await template.save();
+
+        // ── Auto-trigger YouTube Shorts upload (non-blocking) ──────────────────
+        if (template.videoUrl) {
+            try {
+                await enqueueYoutubeUpload({
+                    videoUrl: template.videoUrl,
+                    templateId: template._id.toString(),
+                    templateName: template.templateName,
+                    triggeredBy: 'auto',
+                    metadata: {
+                        title: template.templateName,
+                        description: template.templateDescription,
+                        tags: [
+                            ...(template.templateTags || []),
+                            'DreamClick',
+                            'CapCut',
+                            'VideoTemplate',
+                            'Shorts',
+                        ],
+                    },
+                });
+                console.log(`[Template] ✅ YouTube upload queued for "${template.templateName}"`);
+            } catch (err) {
+                // Never block the template creation if YouTube queueing fails
+                console.warn('[Template] ⚠️  Could not queue YouTube upload:', err.message);
+            }
+        }
+
+        return template;
     }
 
     /**

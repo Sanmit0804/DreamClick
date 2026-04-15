@@ -9,6 +9,7 @@ const connectDB = require('./config/db');
 const authRoute = require('./routes/auth.route');
 const uploadRoute = require('./routes/upload.route');
 const apiRoutes = require('./routes/index');
+const youtubeRoute = require('./routes/youtube.route');
 const { AppError } = require('./utils/AppError');
 
 const app = express();
@@ -31,6 +32,7 @@ app.get('/ping', (_req, res) => res.json({ status: 'ok', message: 'PONG 🏓' })
 app.use('/auth', authRoute);
 app.use('/api', apiRoutes);
 app.use('/upload', uploadRoute);
+app.use('/youtube', youtubeRoute);
 
 // ── Serve frontend (production) ───────────────────────────────────────────────
 const frontendPath = path.join(path.resolve(), 'client', 'dist');

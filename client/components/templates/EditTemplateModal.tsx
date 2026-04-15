@@ -31,7 +31,7 @@ const CATEGORIES = [
 type FormValues = {
     templateName: string;
     templateDescription: string;
-    videoUrl: string;
+    videoUrl?: string; // fallback if they don't upload a new file
     templatePrice: number;
     templateOldPrice?: number;
     templateTags?: string;
@@ -55,6 +55,8 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     const [selectedCategory, setSelectedCategory] = useState(
         template.templateCategory || 'General'
     );
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [templateFile, setTemplateFile] = useState<File | null>(null);
 
     const {
         register,
@@ -91,10 +93,20 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
 
     const onSubmit = async (data: FormValues) => {
         try {
+            let activeVideoUrl = data.videoUrl?.trim();
+            if (videoFile) {
+                activeVideoUrl = await templateService.uploadFile(videoFile);
+            }
+
+            let activeTemplateFileUrl = data.templateFileUrl?.trim();
+            if (templateFile) {
+                activeTemplateFileUrl = await templateService.uploadFile(templateFile);
+            }
+
             const payload: Partial<CreateTemplatePayload> = {
                 templateName: data.templateName.trim(),
                 templateDescription: data.templateDescription.trim(),
-                videoUrl: data.videoUrl.trim(),
+                videoUrl: activeVideoUrl,
                 templatePrice: Number(data.templatePrice),
                 templateOldPrice: data.templateOldPrice
                     ? Number(data.templateOldPrice)
@@ -104,7 +116,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                     ? data.templateTags.split(',').map((t) => t.trim()).filter(Boolean)
                     : [],
                 templateThumbnail: data.templateThumbnail?.trim() || undefined,
-                templateFileUrl: data.templateFileUrl?.trim() || undefined,
+                templateFileUrl: activeTemplateFileUrl || undefined,
             };
 
             const updated = await templateService.updateTemplate(template._id, payload);
@@ -168,27 +180,37 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                         )}
                     </div>
 
-                    {/* Preview Video URL */}
+                    {/* Preview Video */}
                     <div className="space-y-1.5">
-                        <Label htmlFor="edit-videoUrl">
-                            Preview Video URL <span className="text-destructive">*</span>
+                        <Label htmlFor="edit-videoFile">
+                            Upload New Preview Video <span className="text-muted-foreground text-xs">(optional, overrides current)</span>
                         </Label>
+                        <Input
+                            id="edit-videoFile"
+                            type="file"
+                            accept="video/mp4,video/quicktime"
+                            onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)}
+                        />
+                        <div className="text-center my-1 text-xs text-muted-foreground">OR current URL:</div>
                         <Input
                             id="edit-videoUrl"
                             type="url"
-                            {...register('videoUrl', {
-                                required: 'Preview video URL is required',
-                                pattern: { value: /^https?:\/\/.+/, message: 'Enter a valid URL' },
-                            })}
+                            {...register('videoUrl')}
                         />
-                        {errors.videoUrl && (
-                            <p className="text-xs text-destructive">{errors.videoUrl.message}</p>
-                        )}
                     </div>
 
-                    {/* VN Template File URL */}
+                    {/* VN Template File */}
                     <div className="space-y-1.5">
-                        <Label htmlFor="edit-templateFileUrl">VN Template File URL</Label>
+                        <Label htmlFor="edit-templateFileInput">
+                            Upload New VN Template <span className="text-muted-foreground text-xs">(optional, overrides current)</span>
+                        </Label>
+                        <Input
+                            id="edit-templateFileInput"
+                            type="file"
+                            accept=".vnp,.zip,.rar"
+                            onChange={(e) => setTemplateFile(e.target.files ? e.target.files[0] : null)}
+                        />
+                        <div className="text-center my-1 text-xs text-muted-foreground">OR current URL:</div>
                         <Input
                             id="edit-templateFileUrl"
                             type="url"
