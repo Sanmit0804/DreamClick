@@ -17,6 +17,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTrigger,
+  SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -207,7 +208,9 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[80vw] max-w-xs pr-0">
             <div className="flex flex-col h-full">
-              <SheetHeader className="text-left px-6" />
+              <SheetHeader className="text-left px-6">
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              </SheetHeader>
 
               {/* User Info */}
               <div className="px-6 py-4">
