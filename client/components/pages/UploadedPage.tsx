@@ -1,5 +1,7 @@
-import { Trash2, RefreshCw, Image, Copy, ExternalLink } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { Trash2, RefreshCw, Image as ImageIcon, Copy, ExternalLink } from "lucide-react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 
 interface UploadedFile {
   name: string;
@@ -9,40 +11,22 @@ interface UploadedFile {
 }
 
 const UploadedPage = () => {
-  const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set());
 
-  const fetchUploadedFiles = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
+  const { data: files = [], isLoading: loading, error: queryError, refetch: fetchUploadedFiles } = useQuery({
+    queryKey: ['uploadedFiles'],
+    queryFn: async () => {
       const res = await fetch("http://localhost:5000/upload/files");
       const data = await res.json();
-      
-      if (data.success) {
-        // Convert lastModified string to Date object
-        const filesWithDates = data.files.map((file: any) => ({
-          ...file,
-          lastModified: new Date(file.lastModified)
-        }));
-        setFiles(filesWithDates);
-      } else {
-        setError("Failed to fetch files");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Error while fetching files");
-    } finally {
-      setLoading(false);
+      if (!data.success) throw new Error("Failed to fetch files");
+      return data.files.map((file: any) => ({
+        ...file,
+        lastModified: new Date(file.lastModified)
+      })) as UploadedFile[];
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchUploadedFiles();
-  }, []);
+  const error = queryError ? queryError.message : null;
 
   const deleteFile = async (fileName: string) => {
     if (!window.confirm(`Are you sure you want to delete "${fileName}"?`)) {
@@ -59,8 +43,7 @@ const UploadedPage = () => {
       const data = await res.json();
       
       if (data.success) {
-        // Remove the file from the local state
-        setFiles(prev => prev.filter(file => file.name !== fileName));
+        fetchUploadedFiles(); // Refresh data using React Query
       } else {
         alert('Failed to delete file: ' + (data.error || 'Unknown error'));
       }
@@ -105,7 +88,7 @@ const UploadedPage = () => {
         <div className="text-center">
           <p className="text-red-500 mb-4">{error}</p>
           <button
-            onClick={fetchUploadedFiles}
+            onClick={() => fetchUploadedFiles()}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
             Retry
@@ -121,7 +104,7 @@ const UploadedPage = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Uploaded Images</h1>
           <button
-            onClick={fetchUploadedFiles}
+            onClick={() => fetchUploadedFiles()}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
           >
             <RefreshCw size={16} />
@@ -131,7 +114,7 @@ const UploadedPage = () => {
 
         {files.length === 0 ? (
           <div className="text-center py-12">
-            <Image className="w-24 h-24 text-gray-400 mx-auto mb-4" />
+            <ImageIcon className="w-24 h-24 text-gray-400 mx-auto mb-4" />
             <p className="text-xl text-gray-500">No images uploaded yet</p>
           </div>
         ) : (
@@ -141,11 +124,13 @@ const UploadedPage = () => {
                 key={index}
                 className="bg-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="aspect-square bg-muted">
-                  <img
+                <div className="aspect-square bg-muted relative">
+                  <Image
                     src={file.url}
                     alt={file.name}
-                    className="w-full h-full object-cover cursor-pointer"
+                    fill
+                    className="object-cover cursor-pointer"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
                     onClick={() => window.open(file.url, '_blank')}
                   />
                 </div>

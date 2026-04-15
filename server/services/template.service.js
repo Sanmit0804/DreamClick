@@ -10,7 +10,8 @@ class TemplateService {
         const filter = userId ? { userId } : {};
         return await Template.find(filter)
             .populate('userId', 'name creatorProfile.avatar')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
     }
 
     /**
@@ -20,7 +21,7 @@ class TemplateService {
         const template = await Template.findById(templateId).populate(
             'userId',
             'name creatorProfile.avatar'
-        );
+        ).lean();
         if (!template) {
             throw AppError.notFound('Template not found');
         }

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Color, Mesh, Program, Renderer, Triangle } from 'ogl';
+import { motion } from 'framer-motion';
 
 interface ThreadsProps {
   color?: [number, number, number];
@@ -135,116 +136,140 @@ const Threads = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const container = containerRef.current;
+    let container = containerRef.current;
     let renderer: any = null;
     let gl: any = null;
+    let resizeHandler: any = null;
+    let mouseMoveHandler: any = null;
+    let mouseLeaveHandler: any = null;
 
-    try {
-      // Use alpha: true to avoid a black background
-      renderer = new Renderer({ alpha: true });
-      gl = renderer.gl;
+    const initTimeoutId = setTimeout(() => {
+      if (!containerRef.current) return;
+      container = containerRef.current;
 
-      if (!gl) {
-        throw new Error('WebGL context not created');
+      try {
+        // Use alpha: true to avoid a black background
+        renderer = new Renderer({ alpha: true });
+        gl = renderer.gl;
+
+        if (!gl) {
+          throw new Error('WebGL context not created');
+        }
+
+        gl.clearColor(0, 0, 0, 0);
+        gl.enable(gl.BLEND);
+        // Use additive blending for a glowing thread "blend effect"
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.canvas.style.width = '100%';
+        gl.canvas.style.height = '100%';
+        gl.canvas.style.display = 'block';
+        
+        // Add CSS blend mode to interact elegantly with the dashboard background
+        gl.canvas.style.mixBlendMode = 'screen';
+        
+        container.appendChild(gl.canvas);
+
+      } catch (e) {
+        console.warn("Could not start WebGL Threads animation", e);
+        return;
       }
 
-      gl.clearColor(0, 0, 0, 0);
-      gl.enable(gl.BLEND);
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      gl.canvas.style.width = '100%';
-      gl.canvas.style.height = '100%';
-      gl.canvas.style.display = 'block';
-      container.appendChild(gl.canvas);
-    } catch (e) {
-      console.warn("Could not start WebGL Threads animation", e);
-      return;
-    }
-
-    const geometry = new Triangle(gl);
-    const program = new Program(gl, {
-      vertex: vertexShader,
-      fragment: fragmentShader,
-      uniforms: {
-        iTime: { value: 0 },
-        iResolution: {
-          value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height),
+      const geometry = new Triangle(gl);
+      const program = new Program(gl, {
+        vertex: vertexShader,
+        fragment: fragmentShader,
+        uniforms: {
+          iTime: { value: 0 },
+          iResolution: {
+            value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height),
+          },
+          uColor: { value: new Color(...color) },
+          uAmplitude: { value: amplitude },
+          uDistance: { value: distance },
+          uMouse: { value: new Float32Array([0.5, 0.5]) },
         },
-        uColor: { value: new Color(...color) },
-        uAmplitude: { value: amplitude },
-        uDistance: { value: distance },
-        uMouse: { value: new Float32Array([0.5, 0.5]) },
-      },
-    });
-    const mesh = new Mesh(gl, { geometry, program });
+      });
+      const mesh = new Mesh(gl, { geometry, program });
 
-    function resize() {
-      if (!container || !renderer) return;
-      const { clientWidth, clientHeight } = container;
-      const width = Math.max(clientWidth, 1);
-      const height = Math.max(clientHeight, 1);
+      resizeHandler = () => {
+        if (!container || !renderer) return;
+        const { clientWidth, clientHeight } = container;
+        const width = Math.max(clientWidth, 1);
+        const height = Math.max(clientHeight, 1);
 
-      renderer.setSize(width, height);
-      program.uniforms.iResolution.value.r = width;
-      program.uniforms.iResolution.value.g = height;
-      program.uniforms.iResolution.value.b = width / height;
-    }
+        renderer.setSize(width, height);
+        program.uniforms.iResolution.value.r = width;
+        program.uniforms.iResolution.value.g = height;
+        program.uniforms.iResolution.value.b = width / height;
+      };
 
-    let currentMouse = [0.5, 0.5];
-    let targetMouse = [0.5, 0.5];
+      let currentMouse = [0.5, 0.5];
+      let targetMouse = [0.5, 0.5];
 
-    function handleMouseMove(e: MouseEvent) {
-      if (!container) return;
-      const rect = container.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1.0 - (e.clientY - rect.top) / rect.height;
-      targetMouse = [x, y];
-    }
+      mouseMoveHandler = (e: MouseEvent) => {
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = 1.0 - (e.clientY - rect.top) / rect.height;
+        targetMouse = [x, y];
+      };
 
-    function handleMouseLeave() {
-      targetMouse = [0.5, 0.5];
-    }
+      mouseLeaveHandler = () => {
+        targetMouse = [0.5, 0.5];
+      };
 
-    function update(t: number) {
-      if (enableMouseInteraction) {
-        const smoothing = 0.05;
-        currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
-        currentMouse[1] += smoothing * (targetMouse[1] - currentMouse[1]);
-        program.uniforms.uMouse.value[0] = currentMouse[0];
-        program.uniforms.uMouse.value[1] = currentMouse[1];
-      } else {
-        program.uniforms.uMouse.value[0] = 0.5;
-        program.uniforms.uMouse.value[1] = 0.5;
+      function update(t: number) {
+        if (enableMouseInteraction) {
+          const smoothing = 0.05;
+          currentMouse[0] += smoothing * (targetMouse[0] - currentMouse[0]);
+          currentMouse[1] += smoothing * (targetMouse[1] - currentMouse[1]);
+          program.uniforms.uMouse.value[0] = currentMouse[0];
+          program.uniforms.uMouse.value[1] = currentMouse[1];
+        } else {
+          program.uniforms.uMouse.value[0] = 0.5;
+          program.uniforms.uMouse.value[1] = 0.5;
+        }
+
+        program.uniforms.iTime.value = t * 0.001;
+        renderer.render({ scene: mesh });
+        animationFrameId.current = requestAnimationFrame(update);
       }
 
-      program.uniforms.iTime.value = t * 0.001;
-      renderer.render({ scene: mesh });
+      window.addEventListener('resize', resizeHandler);
+      if (enableMouseInteraction) {
+        container.addEventListener('mousemove', mouseMoveHandler);
+        container.addEventListener('mouseleave', mouseLeaveHandler);
+      }
+
+      resizeHandler();
       animationFrameId.current = requestAnimationFrame(update);
-    }
-
-    window.addEventListener('resize', resize);
-    if (enableMouseInteraction) {
-      container.addEventListener('mousemove', handleMouseMove);
-      container.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    resize();
-    animationFrameId.current = requestAnimationFrame(update);
+    }, 800); // 800ms delay to allow important dashboard components to render freely
 
     return () => {
+      clearTimeout(initTimeoutId);
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
-      window.removeEventListener('resize', resize);
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
       if (enableMouseInteraction) {
-        container.removeEventListener('mousemove', handleMouseMove);
-        container.removeEventListener('mouseleave', handleMouseLeave);
+        if (mouseMoveHandler && container) container.removeEventListener('mousemove', mouseMoveHandler);
+        if (mouseLeaveHandler && container) container.removeEventListener('mouseleave', mouseLeaveHandler);
       }
-      if (gl?.canvas && container.contains(gl.canvas)) {
+      if (gl?.canvas && container?.contains(gl.canvas)) {
         container.removeChild(gl.canvas);
       }
       gl?.getExtension('WEBGL_lose_context')?.loseContext();
     };
   }, [color, amplitude, distance, enableMouseInteraction]);
 
-  return <div ref={containerRef} className={`relative h-full w-full ${className}`} />;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1.5, delay: 0.8, ease: "easeInOut" }}
+      className={`relative h-full w-full ${className}`}
+    >
+      <div ref={containerRef} className="h-full w-full" />
+    </motion.div>
+  );
 };
 
 export default Threads;

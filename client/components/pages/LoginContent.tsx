@@ -2,6 +2,7 @@
 
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import Image from "next/image"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
@@ -200,10 +201,13 @@ export default function Auth() {
             {/* Left Image Section */}
             {currentDevice == 'laptop' && (
                 <div className="w-1/2 h-full relative overflow-hidden floating-astronaut">
-                    <img
-                        src="./astronaut_copy.png"
+                    <Image
+                        src="/astronaut_copy.png"
                         alt="Login Illustration"
-                        className="w-full h-full object-contain -translate-y-6"
+                        fill
+                        className="object-contain -translate-y-6"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority
                     />
                 </div>
             )}
