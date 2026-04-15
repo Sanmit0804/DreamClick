@@ -71,6 +71,8 @@ const templateSchema = new mongoose.Schema(
 // Index for common queries
 templateSchema.index({ templateCategory: 1 });
 templateSchema.index({ createdAt: -1 });
+templateSchema.index({ userId: 1, createdAt: -1 });
+templateSchema.index({ templateName: 'text', templateDescription: 'text', templateTags: 'text' });
 
 const TemplateModel = mongoose.model('Template', templateSchema);
 module.exports = TemplateModel;

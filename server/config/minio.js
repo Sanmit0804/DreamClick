@@ -1,11 +1,12 @@
 const Minio = require('minio');
+const { env } = require('./env');
 
 const minioClient = new Minio.Client({
-  endPoint: 'localhost',
-  port: 9000,
-  useSSL: false,
-  accessKey: process.env.MINIO_ROOT_USER || 'admin',
-  secretKey: process.env.MINIO_ROOT_PASSWORD || 'password123',
+  endPoint: env.minio.endPoint,
+  port: env.minio.port,
+  useSSL: env.minio.useSSL,
+  accessKey: env.minio.accessKey,
+  secretKey: env.minio.secretKey,
 });
 
 module.exports = minioClient;

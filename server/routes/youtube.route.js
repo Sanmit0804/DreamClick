@@ -1,21 +1,24 @@
 const express = require('express');
 const { authenticate, requireAdmin } = require('../middlewares/auth.middleware');
 const YoutubeController = require('../controllers/youtube.controller');
+const validate = require('../middlewares/validate.middleware');
+const { youtubeValidator } = require('../validators');
 
 const router = express.Router();
 
-// ── Public (Google redirects here) ────────────────────────────────────────────
-// NOTE: This must NOT be behind auth middleware because Google's redirect won't carry a JWT.
-router.get('/oauth/callback', YoutubeController.oauthCallback);
+router.get(
+  '/oauth/callback',
+  validate({ query: youtubeValidator.oauthCallbackQuery }),
+  YoutubeController.oauthCallback
+);
 
-// ── All other routes require admin login ──────────────────────────────────────
 router.use(authenticate, requireAdmin);
 
-router.get('/auth/url',    YoutubeController.getAuthUrl);
-router.get('/status',      YoutubeController.getStatus);
+router.get('/auth/url', YoutubeController.getAuthUrl);
+router.get('/status', YoutubeController.getStatus);
 router.post('/disconnect', YoutubeController.disconnect);
-router.post('/upload',     YoutubeController.triggerUpload);
-router.get('/logs',        YoutubeController.getLogs);
-router.get('/queue',       YoutubeController.getQueue);
+router.post('/upload', validate({ body: youtubeValidator.uploadBody }), YoutubeController.triggerUpload);
+router.get('/logs', validate({ query: youtubeValidator.logsQuery }), YoutubeController.getLogs);
+router.get('/queue', YoutubeController.getQueue);
 
 module.exports = router;

@@ -1,93 +1,110 @@
 const express = require('express');
 const multer = require('multer');
+const path = require('path');
 const minioClient = require('../config/minio');
+const { env } = require('../config/env');
+const logger = require('../config/logger');
+const validate = require('../middlewares/validate.middleware');
+const { uploadValidator } = require('../validators');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: Number(process.env.UPLOAD_MAX_BYTES) || 100 * 1024 * 1024,
+    files: 1,
+  },
+});
+
+const buildFileUrl = (bucket, fileName) =>
+  `${env.minio.publicUrl.replace(/\/$/, '')}/${bucket}/${encodeURIComponent(fileName)}`;
 
 router.post('/', upload.single('file'), async (req, res) => {
   try {
-    const bucket = 'mybucket';
-    const fileName = `${Date.now()}-${req.file.originalname}`;
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'File is required' });
+    }
 
-    await minioClient.putObject(bucket, fileName, req.file.buffer);
+    const bucket = env.minio.bucket;
+    const originalName = path.basename(req.file.originalname).replace(/[^\w.\- ]+/g, '_');
+    const fileName = `${Date.now()}-${originalName}`;
+
+    await minioClient.putObject(bucket, fileName, req.file.buffer, req.file.size, {
+      'Content-Type': req.file.mimetype,
+    });
 
     res.json({
       success: true,
       message: 'File uploaded successfully',
-      fileUrl: `http://127.0.0.1:9000/${bucket}/${fileName}`,
+      fileUrl: buildFileUrl(bucket, fileName),
     });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, 'Upload failed');
     res.status(500).json({ success: false, error: 'Upload failed' });
   }
 });
 
-router.get('/files', async (req, res) => {
+router.get('/files', async (_req, res) => {
   try {
-    const bucket = 'mybucket';
+    const bucket = env.minio.bucket;
     const objects = [];
-    
+
     const stream = minioClient.listObjects(bucket, '', true);
-    
+
     stream.on('data', (obj) => {
       objects.push({
         name: obj.name,
         size: obj.size,
         lastModified: obj.lastModified,
-        url: `http://127.0.0.1:9000/${bucket}/${obj.name}`
+        url: buildFileUrl(bucket, obj.name),
       });
     });
-    
+
     stream.on('end', () => {
       res.json({
         success: true,
-        files: objects
+        files: objects,
       });
     });
-    
+
     stream.on('error', (err) => {
-      console.error(err);
+      logger.error({ err }, 'Failed to list files');
       res.status(500).json({ success: false, error: 'Failed to list files' });
     });
-    
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, 'Failed to list files');
     res.status(500).json({ success: false, error: 'Failed to list files' });
   }
 });
 
-// DELETE route to remove a file
-router.delete('/files/:fileName', async (req, res) => {
+router.delete('/files/:fileName', validate({ params: uploadValidator.fileParams }), async (req, res) => {
   try {
-    const bucket = 'mybucket';
-    const fileName = req.params.fileName;
+    const bucket = env.minio.bucket;
+    const fileName = path.basename(req.params.fileName);
 
-    // Check if the file exists
     try {
       await minioClient.statObject(bucket, fileName);
     } catch (err) {
       if (err.code === 'NotFound') {
         return res.status(404).json({
           success: false,
-          error: 'File not found'
+          error: 'File not found',
         });
       }
       throw err;
     }
 
-    // Delete the file
     await minioClient.removeObject(bucket, fileName);
 
     res.json({
       success: true,
-      message: 'File deleted successfully'
+      message: 'File deleted successfully',
     });
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, 'Failed to delete file');
     res.status(500).json({
       success: false,
-      error: 'Failed to delete file'
+      error: 'Failed to delete file',
     });
   }
 });

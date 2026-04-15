@@ -1,60 +1,33 @@
-/**
- * youtube.service.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Core YouTube Data API v3 service layer.
- *
- * Responsibilities:
- *  • Build and manage the OAuth2 client
- *  • Persist / refresh tokens via MongoDB (YoutubeToken model)
- *  • uploadToYouTube(videoPath, metadata) — the public upload function
- *  • Shorts optimisation (title/description injection of #Shorts)
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
 const { google } = require('googleapis');
 const fs = require('fs');
+const fsp = require('fs/promises');
 const path = require('path');
-const YoutubeToken = require('../models/youtubeToken.model');
+const os = require('os');
+const axios = require('axios');
+const logger = require('../config/logger');
+const { youtubeRepository } = require('../repositories');
 
-// ── OAuth2 client ─────────────────────────────────────────────────────────────
-const getOAuth2Client = () => {
-  return new google.auth.OAuth2(
+const getAdminEmail = () => process.env.YOUTUBE_ADMIN_EMAIL || 'dreamclick0823@gmail.com';
+
+const getOAuth2Client = () =>
+  new google.auth.OAuth2(
     process.env.YOUTUBE_CLIENT_ID,
     process.env.YOUTUBE_CLIENT_SECRET,
-    process.env.YOUTUBE_REDIRECT_URI   // e.g. http://localhost:5000/youtube/oauth/callback
+    process.env.YOUTUBE_REDIRECT_URI
   );
-};
 
-// ── Token helpers ─────────────────────────────────────────────────────────────
-
-/**
- * Persist (upsert) tokens to MongoDB.
- * @param {object} tokens  – object from oauth2Client.getToken() or setCredentials
- */
 const saveTokens = async (tokens) => {
-  const email = process.env.YOUTUBE_ADMIN_EMAIL || 'dreamclick0823@gmail.com';
-  await YoutubeToken.findOneAndUpdate(
-    { email },
-    {
-      accessToken: tokens.access_token ?? undefined,
-      refreshToken: tokens.refresh_token ?? undefined,
-      tokenType: tokens.token_type ?? 'Bearer',
-      expiryDate: tokens.expiry_date ?? null,
-      scope: tokens.scope ?? null,
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+  await youtubeRepository.upsertToken(getAdminEmail(), {
+    accessToken: tokens.access_token ?? undefined,
+    refreshToken: tokens.refresh_token ?? undefined,
+    tokenType: tokens.token_type ?? 'Bearer',
+    expiryDate: tokens.expiry_date ?? null,
+    scope: tokens.scope ?? null,
+  });
 };
 
-/**
- * Load stored tokens and attach them to an OAuth2 client.
- * Returns null if no tokens are saved yet (admin hasn't authorised).
- * @returns {google.auth.OAuth2 | null}
- */
 const getAuthorizedClient = async () => {
-  const email = process.env.YOUTUBE_ADMIN_EMAIL || 'dreamclick0823@gmail.com';
-  const tokenDoc = await YoutubeToken.findOne({ email });
-
+  const tokenDoc = await youtubeRepository.findTokenByEmail(getAdminEmail());
   if (!tokenDoc || !tokenDoc.refreshToken) return null;
 
   const oauth2Client = getOAuth2Client();
@@ -66,9 +39,8 @@ const getAuthorizedClient = async () => {
     scope: tokenDoc.scope,
   });
 
-  // Auto-refresh when access token is expired / missing
   oauth2Client.on('tokens', async (newTokens) => {
-    console.log('[YouTube] 🔄 Access token refreshed automatically');
+    logger.info('YouTube access token refreshed');
     await saveTokens({
       ...newTokens,
       refresh_token: newTokens.refresh_token ?? tokenDoc.refreshToken,
@@ -78,38 +50,33 @@ const getAuthorizedClient = async () => {
   return oauth2Client;
 };
 
-// ── Shorts helpers ────────────────────────────────────────────────────────────
-
-/**
- * Ensure the title/description qualifies the video as a YouTube Short.
- */
 const optimizeForShorts = (title = '', description = '') => {
   const shortsTag = '#Shorts';
   const isInTitle = title.toLowerCase().includes('#shorts');
   const isInDesc = description.toLowerCase().includes('#shorts');
 
-  const finalTitle = isInTitle || isInTitle ? title : `${title} ${shortsTag}`.trim();
+  const finalTitle = isInTitle ? title : `${title} ${shortsTag}`.trim();
   const finalDesc = isInDesc ? description : `${description}\n\n${shortsTag} #DreamClick`.trim();
 
   return { title: finalTitle, description: finalDesc };
 };
 
-// ── Main upload function ──────────────────────────────────────────────────────
+const createVideoStream = async (videoPath) => {
+  if (!videoPath.startsWith('http://') && !videoPath.startsWith('https://')) {
+    return { fileStream: fs.createReadStream(videoPath), tempFilePath: null };
+  }
 
-/**
- * Upload a video file to YouTube as a Short.
- *
- * @param {string}  videoPath  – Absolute path to the local video file.
- *                               If videoPath starts with "http", it is assumed
- *                               to be a public URL (downloaded to a temp file first).
- * @param {object}  metadata
- *   @param {string}   metadata.title
- *   @param {string}   metadata.description
- *   @param {string[]} [metadata.tags]
- *   @param {string}   [metadata.privacyStatus] – 'public' | 'private' | 'unlisted'
- *   @param {string}   [metadata.categoryId]    – YouTube category (default: '22' = People & Blogs)
- * @returns {object} YouTube API response (snippet + status)
- */
+  const response = await axios.get(videoPath, {
+    responseType: 'arraybuffer',
+    timeout: 120_000,
+    maxContentLength: 250 * 1024 * 1024,
+  });
+  const ext = path.extname(new URL(videoPath).pathname) || '.mp4';
+  const tempFilePath = path.join(os.tmpdir(), `yt_upload_${Date.now()}${ext}`);
+  await fsp.writeFile(tempFilePath, response.data);
+  return { fileStream: fs.createReadStream(tempFilePath), tempFilePath };
+};
+
 const uploadToYouTube = async (videoPath, metadata = {}) => {
   const oauth2Client = await getAuthorizedClient();
   if (!oauth2Client) {
@@ -117,7 +84,6 @@ const uploadToYouTube = async (videoPath, metadata = {}) => {
   }
 
   const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
-
   const {
     title: rawTitle = 'DreamClick Template',
     description: rawDesc = 'Check out this awesome template from DreamClick!',
@@ -127,22 +93,7 @@ const uploadToYouTube = async (videoPath, metadata = {}) => {
   } = metadata;
 
   const { title, description } = optimizeForShorts(rawTitle, rawDesc);
-
-  // If videoPath is a URL, download it to a temp buffer first
-  let fileStream;
-  let tempFilePath = null;
-
-  if (videoPath.startsWith('http://') || videoPath.startsWith('https://')) {
-    const axios = require('axios');
-    const os = require('os');
-    const response = await axios.get(videoPath, { responseType: 'arraybuffer', timeout: 120_000 });
-    const ext = path.extname(new URL(videoPath).pathname) || '.mp4';
-    tempFilePath = path.join(os.tmpdir(), `yt_upload_${Date.now()}${ext}`);
-    fs.writeFileSync(tempFilePath, response.data);
-    fileStream = fs.createReadStream(tempFilePath);
-  } else {
-    fileStream = fs.createReadStream(videoPath);
-  }
+  const { fileStream, tempFilePath } = await createVideoStream(videoPath);
 
   try {
     const response = await youtube.videos.insert({
@@ -168,8 +119,7 @@ const uploadToYouTube = async (videoPath, metadata = {}) => {
     });
 
     const videoId = response.data.id;
-    console.log(`[YouTube] ✅ Uploaded successfully! ID: ${videoId}`);
-    console.log(`[YouTube] 🔗 https://www.youtube.com/shorts/${videoId}`);
+    logger.info({ videoId }, 'YouTube upload succeeded');
 
     return {
       videoId,
@@ -178,23 +128,15 @@ const uploadToYouTube = async (videoPath, metadata = {}) => {
       description,
     };
   } finally {
-    // Cleanup temp file if we created one
-    if (tempFilePath && fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
-    }
+    if (tempFilePath) await fsp.rm(tempFilePath, { force: true });
   }
 };
 
-// ── OAuth flow helpers ────────────────────────────────────────────────────────
-
-/**
- * Generate the Google OAuth consent page URL for the admin to visit.
- */
 const getAuthUrl = () => {
   const oauth2Client = getOAuth2Client();
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    prompt: 'consent',      // force so we always get a refresh_token
+    prompt: 'consent',
     scope: [
       'https://www.googleapis.com/auth/youtube.upload',
       'https://www.googleapis.com/auth/youtube',
@@ -203,25 +145,16 @@ const getAuthUrl = () => {
   });
 };
 
-/**
- * Exchange the auth code (from OAuth callback) for tokens and save them.
- * @param {string} code
- */
 const handleOAuthCallback = async (code) => {
   const oauth2Client = getOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
   await saveTokens(tokens);
-  console.log('[YouTube] ✅ OAuth tokens saved successfully');
+  logger.info('YouTube OAuth tokens saved successfully');
   return tokens;
 };
 
-/**
- * Check whether valid (connected) tokens exist.
- * @returns {{ connected: boolean, email: string|null, expiryDate: number|null }}
- */
 const getConnectionStatus = async () => {
-  const email = process.env.YOUTUBE_ADMIN_EMAIL || 'dreamclick0823@gmail.com';
-  const tokenDoc = await YoutubeToken.findOne({ email });
+  const tokenDoc = await youtubeRepository.findTokenByEmail(getAdminEmail());
   return {
     connected: !!(tokenDoc && tokenDoc.refreshToken),
     email: tokenDoc ? tokenDoc.email : null,
@@ -230,22 +163,19 @@ const getConnectionStatus = async () => {
   };
 };
 
-/**
- * Revoke and delete stored tokens (disconnect YouTube).
- */
 const disconnectYouTube = async () => {
-  const email = process.env.YOUTUBE_ADMIN_EMAIL || 'dreamclick0823@gmail.com';
-  const tokenDoc = await YoutubeToken.findOne({ email });
+  const email = getAdminEmail();
+  const tokenDoc = await youtubeRepository.findTokenByEmail(email);
   if (tokenDoc && tokenDoc.accessToken) {
     try {
       const oauth2Client = getOAuth2Client();
       await oauth2Client.revokeToken(tokenDoc.accessToken);
-    } catch (e) {
-      console.warn('[YouTube] Could not revoke token (may already be expired):', e.message);
+    } catch (err) {
+      logger.warn({ err }, 'Could not revoke YouTube token');
     }
   }
-  await YoutubeToken.deleteOne({ email });
-  console.log('[YouTube] 🔌 Disconnected');
+  await youtubeRepository.deleteTokenByEmail(email);
+  logger.info('YouTube disconnected');
 };
 
 module.exports = {

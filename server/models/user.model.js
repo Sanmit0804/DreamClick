@@ -21,6 +21,7 @@ const UserSchema = new mongoose.Schema({
             return this.authProvider === 'local';
         },
         minlength: 6,
+        select: false,
     },
     
     // --- UPDATED FOR RAZORPAY ---
@@ -53,7 +54,7 @@ const UserSchema = new mongoose.Schema({
     purchases: [{
         templateId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'VideoTemplate'
+            ref: 'Template'
         },
         purchasedAt: {
             type: Date,
@@ -87,11 +88,11 @@ const UserSchema = new mongoose.Schema({
 
     cart: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'VideoTemplate'
+        ref: 'Template'
     }],
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'VideoTemplate'
+        ref: 'Template'
     }],
 
     // Additional fields for Razorpay
@@ -143,6 +144,9 @@ const UserSchema = new mongoose.Schema({
     lastLogin: Date
 
 }, { timestamps: true });
+
+UserSchema.index({ role: 1 });
+UserSchema.index({ isActive: 1 });
 
 // Hash password before saving
 UserSchema.pre('save', async function(next) {

@@ -26,4 +26,7 @@ const youtubeUploadLogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+youtubeUploadLogSchema.index({ status: 1, createdAt: -1 });
+youtubeUploadLogSchema.index({ templateId: 1, createdAt: -1 });
+
 module.exports = mongoose.model('YoutubeUploadLog', youtubeUploadLogSchema);

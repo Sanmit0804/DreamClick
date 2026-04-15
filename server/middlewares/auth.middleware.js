@@ -1,34 +1,52 @@
 const jwt = require('jsonwebtoken');
+const { env } = require('../config/env');
 const { AppError } = require('../utils/AppError');
 
-/**
- * Middleware to verify JWT and attach user info to req.user
- */
-const authenticate = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return next(AppError.unauthorized('No token provided. Please log in.'));
-    }
-
-    const token = authHeader.split(' ')[1];
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // { id, iat, exp }
-        next();
-    } catch (error) {
-        return next(AppError.unauthorized('Invalid or expired token. Please log in again.'));
-    }
+const readBearerToken = (req) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || typeof authHeader !== 'string') return null;
+  if (!authHeader.startsWith('Bearer ')) return null;
+  return authHeader.slice(7).trim();
 };
 
-/**
- * Middleware to restrict routes to admin users only.
- * Must be used AFTER authenticate.
- */
-const requireAdmin = (req, res, next) => {
-    if (!req.user || req.user.role !== 'admin') {
-        return next(AppError.forbidden('Access denied. Admins only.'));
-    }
-    next();
+const authenticate = (req, _res, next) => {
+  const token = readBearerToken(req);
+  if (!token) {
+    return next(AppError.unauthorized('No token provided. Please log in.'));
+  }
+
+  try {
+    req.user = jwt.verify(token, env.jwtSecret);
+    return next();
+  } catch (error) {
+    return next(error);
+  }
 };
 
-module.exports = { authenticate, requireAdmin };
+const optionalAuthenticate = (req, _res, next) => {
+  const token = readBearerToken(req);
+  if (!token) return next();
+
+  try {
+    req.user = jwt.verify(token, env.jwtSecret);
+    return next();
+  } catch (_error) {
+    return next();
+  }
+};
+
+const authorizeRoles = (...roles) => (req, _res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return next(AppError.forbidden('Access denied.', 'FORBIDDEN'));
+  }
+  return next();
+};
+
+const requireAdmin = authorizeRoles('admin');
+
+module.exports = {
+  authenticate,
+  optionalAuthenticate,
+  authorizeRoles,
+  requireAdmin,
+};
