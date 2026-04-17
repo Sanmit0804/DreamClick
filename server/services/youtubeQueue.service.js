@@ -1,6 +1,5 @@
 const PQueueImport = require('p-queue');
 const PQueue = PQueueImport.default || PQueueImport;
-const logger = require('../config/logger');
 const { youtubeRepository } = require('../repositories');
 const Template = require('../models/template.model');
 const { uploadToYouTube } = require('./youtube.service');
@@ -29,7 +28,7 @@ const enqueueYoutubeUpload = async ({
     triggeredBy,
   });
 
-  logger.info({ templateId, logId: log._id }, 'YouTube upload enqueued');
+  console.log({ templateId, logId: log._id }, 'YouTube upload enqueued');
 
   queue.add(async () => {
     await log.updateOne({ status: 'processing' });
@@ -52,14 +51,14 @@ const enqueueYoutubeUpload = async ({
           youtubeVideoUrl: result.videoUrl,
         });
 
-        logger.info({ templateId, attempt, videoUrl: result.videoUrl }, 'YouTube upload completed');
+        console.log({ templateId, attempt, videoUrl: result.videoUrl }, 'YouTube upload completed');
         return;
       } catch (err) {
         lastError = err;
-        logger.error({ err, templateId, attempt }, 'YouTube upload attempt failed');
+        console.error({ err, templateId, attempt }, 'YouTube upload attempt failed');
 
         if (isQuotaExceeded(err)) {
-          logger.warn({ templateId }, 'YouTube quota exceeded; stopping retries');
+          console.warn({ templateId }, 'YouTube quota exceeded; stopping retries');
           break;
         }
 
@@ -75,7 +74,7 @@ const enqueueYoutubeUpload = async ({
       retries: MAX_RETRIES,
       errorMessage: lastError?.message || 'Unknown error',
     });
-    logger.error({ templateId }, 'YouTube upload permanently failed');
+    console.error({ templateId }, 'YouTube upload permanently failed');
   });
 
   return log._id.toString();

@@ -1,32 +1,23 @@
-const pinoHttp = require('pino-http');
 const { randomUUID } = require('crypto');
-const logger = require('../config/logger');
-const { env } = require('../config/env');
 
-module.exports = pinoHttp({
-  logger,
-  genReqId: (req) => req.headers['x-request-id'] || randomUUID(),
-  autoLogging: {
-    ignore: (req) => req.url === '/ping',
-  },
-  serializers: {
-    req(req) {
-      return {
-        id: req.id,
-        method: req.method,
-        url: req.url,
-        remoteAddress: req.remoteAddress,
-      };
-    },
-    res(res) {
-      return {
-        statusCode: res.statusCode,
-      };
-    },
-  },
-  customLogLevel(_req, res, err) {
-    if (err || res.statusCode >= 500) return 'error';
-    if (res.statusCode >= 400) return 'warn';
-    return env.isProduction ? 'info' : 'debug';
-  },
-});
+module.exports = (req, res, next) => {
+  if (req.url === '/ping') return next();
+
+  req.id = req.headers['x-request-id'] || randomUUID();
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const msg = `[${req.method}] ${req.url} - ${res.statusCode} - ${duration}ms`;
+
+    if (res.statusCode >= 500) {
+      console.error(msg);
+    } else if (res.statusCode >= 400) {
+      console.warn(msg);
+    } else {
+      console.log(msg);
+    }
+  });
+
+  next();
+};

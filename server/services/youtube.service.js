@@ -4,7 +4,6 @@ const fsp = require('fs/promises');
 const path = require('path');
 const os = require('os');
 const axios = require('axios');
-const logger = require('../config/logger');
 const { youtubeRepository } = require('../repositories');
 
 const getAdminEmail = () => process.env.YOUTUBE_ADMIN_EMAIL || 'dreamclick0823@gmail.com';
@@ -40,7 +39,7 @@ const getAuthorizedClient = async () => {
   });
 
   oauth2Client.on('tokens', async (newTokens) => {
-    logger.info('YouTube access token refreshed');
+    console.log('YouTube access token refreshed');
     await saveTokens({
       ...newTokens,
       refresh_token: newTokens.refresh_token ?? tokenDoc.refreshToken,
@@ -119,7 +118,7 @@ const uploadToYouTube = async (videoPath, metadata = {}) => {
     });
 
     const videoId = response.data.id;
-    logger.info({ videoId }, 'YouTube upload succeeded');
+    console.log({ videoId }, 'YouTube upload succeeded');
 
     return {
       videoId,
@@ -149,7 +148,7 @@ const handleOAuthCallback = async (code) => {
   const oauth2Client = getOAuth2Client();
   const { tokens } = await oauth2Client.getToken(code);
   await saveTokens(tokens);
-  logger.info('YouTube OAuth tokens saved successfully');
+  console.log('YouTube OAuth tokens saved successfully');
   return tokens;
 };
 
@@ -171,11 +170,11 @@ const disconnectYouTube = async () => {
       const oauth2Client = getOAuth2Client();
       await oauth2Client.revokeToken(tokenDoc.accessToken);
     } catch (err) {
-      logger.warn({ err }, 'Could not revoke YouTube token');
+      console.warn({ err }, 'Could not revoke YouTube token');
     }
   }
   await youtubeRepository.deleteTokenByEmail(email);
-  logger.info('YouTube disconnected');
+  console.log('YouTube disconnected');
 };
 
 module.exports = {

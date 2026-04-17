@@ -3,7 +3,6 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
 const corsOptions = require('./config/cors');
-const logger = require('./config/logger');
 const { env, assertRequiredEnv } = require('./config/env');
 const authRoute = require('./routes/auth.route');
 const uploadRoute = require('./routes/upload.route');
@@ -40,6 +39,9 @@ app.use(xssSanitizer);
 
 app.get('/ping', (_req, res) => res.json({ status: 'ok', message: 'PONG' }));
 
+const uploadsPath = path.resolve(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsPath));
+
 app.use('/auth', authLimiter, authRoute);
 app.use('/api', apiLimiter, apiRoutes);
 app.use('/upload', apiLimiter, uploadRoute);
@@ -55,13 +57,13 @@ app.get('*', (_req, res) => {
 });
 
 const server = app.listen(env.port, () => {
-  logger.info(`Server running on PORT: ${env.port}`);
+  console.log(`🛜  Server running on PORT: ${env.port}`);
 });
 
 const shutdown = (signal) => {
-  logger.info({ signal }, 'Shutdown signal received');
+  console.log({ signal }, 'Shutdown signal received');
   server.close(() => {
-    logger.info('HTTP server closed');
+    console.log('HTTP server closed');
     process.exit(0);
   });
 };

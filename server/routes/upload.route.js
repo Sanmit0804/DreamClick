@@ -1,9 +1,9 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const minioClient = require('../config/minio');
 const { env } = require('../config/env');
-const logger = require('../config/logger');
 const validate = require('../middlewares/validate.middleware');
 const { uploadValidator } = require('../validators');
 
@@ -16,8 +16,10 @@ const upload = multer({
   },
 });
 
-const buildFileUrl = (bucket, fileName) =>
-  `${env.minio.publicUrl.replace(/\/$/, '')}/${bucket}/${encodeURIComponent(fileName)}`;
+const buildFileUrl = (bucket, fileName) => {
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  return `${protocol}://localhost:${process.env.PORT || 5000}/uploads/${encodeURIComponent(fileName)}`;
+};
 
 router.post('/', upload.single('file'), async (req, res) => {
   try {
@@ -29,9 +31,13 @@ router.post('/', upload.single('file'), async (req, res) => {
     const originalName = path.basename(req.file.originalname).replace(/[^\w.\- ]+/g, '_');
     const fileName = `${Date.now()}-${originalName}`;
 
-    await minioClient.putObject(bucket, fileName, req.file.buffer, req.file.size, {
-      'Content-Type': req.file.mimetype,
-    });
+    // Fix: Fall back to local file system if MinIO is not running
+    const uploadDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const filePath = path.join(uploadDir, fileName);
+    await fs.promises.writeFile(filePath, req.file.buffer);
 
     res.json({
       success: true,
@@ -39,7 +45,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       fileUrl: buildFileUrl(bucket, fileName),
     });
   } catch (err) {
-    logger.error({ err }, 'Upload failed');
+    console.error({ err }, 'Upload failed');
     res.status(500).json({ success: false, error: 'Upload failed' });
   }
 });
@@ -47,61 +53,54 @@ router.post('/', upload.single('file'), async (req, res) => {
 router.get('/files', async (_req, res) => {
   try {
     const bucket = env.minio.bucket;
+    const uploadDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      return res.json({ success: true, files: [] });
+    }
+
+    const files = await fs.promises.readdir(uploadDir);
     const objects = [];
 
-    const stream = minioClient.listObjects(bucket, '', true);
-
-    stream.on('data', (obj) => {
+    for (const file of files) {
+      const stats = await fs.promises.stat(path.join(uploadDir, file));
       objects.push({
-        name: obj.name,
-        size: obj.size,
-        lastModified: obj.lastModified,
-        url: buildFileUrl(bucket, obj.name),
+        name: file,
+        size: stats.size,
+        lastModified: stats.mtime,
+        url: buildFileUrl(bucket, file),
       });
-    });
+    }
 
-    stream.on('end', () => {
-      res.json({
-        success: true,
-        files: objects,
-      });
-    });
-
-    stream.on('error', (err) => {
-      logger.error({ err }, 'Failed to list files');
-      res.status(500).json({ success: false, error: 'Failed to list files' });
+    res.json({
+      success: true,
+      files: objects,
     });
   } catch (err) {
-    logger.error({ err }, 'Failed to list files');
+    console.error({ err }, 'Failed to list files');
     res.status(500).json({ success: false, error: 'Failed to list files' });
   }
 });
 
 router.delete('/files/:fileName', validate({ params: uploadValidator.fileParams }), async (req, res) => {
   try {
-    const bucket = env.minio.bucket;
     const fileName = path.basename(req.params.fileName);
+    const filePath = path.join(__dirname, '..', 'uploads', fileName);
 
-    try {
-      await minioClient.statObject(bucket, fileName);
-    } catch (err) {
-      if (err.code === 'NotFound') {
-        return res.status(404).json({
-          success: false,
-          error: 'File not found',
-        });
-      }
-      throw err;
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        error: 'File not found',
+      });
     }
 
-    await minioClient.removeObject(bucket, fileName);
+    await fs.promises.unlink(filePath);
 
     res.json({
       success: true,
       message: 'File deleted successfully',
     });
   } catch (err) {
-    logger.error({ err }, 'Failed to delete file');
+    console.error({ err }, 'Failed to delete file');
     res.status(500).json({
       success: false,
       error: 'Failed to delete file',

@@ -1,5 +1,4 @@
 const { AppError } = require('../utils/AppError');
-const logger = require('../config/logger');
 
 const normalizeError = (err) => {
   if (err instanceof AppError || err.isOperational) return err;
@@ -38,9 +37,9 @@ const errorHandler = (err, req, res, _next) => {
   const statusCode = normalized.statusCode || 500;
 
   if (statusCode >= 500) {
-    logger.error({ err, reqId: req.id, path: req.originalUrl }, 'Unhandled request error');
+    console.error({ err, reqId: req.id, path: req.originalUrl }, 'Unhandled request error');
   } else {
-    logger.warn({ err: normalized, reqId: req.id, path: req.originalUrl }, 'Request failed');
+    console.warn({ err: normalized, reqId: req.id, path: req.originalUrl }, 'Request failed');
   }
 
   if (normalized.isOperational) {

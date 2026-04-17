@@ -1,6 +1,5 @@
 const User = require('../models/user.model');
 const { AppError } = require('../utils/AppError');
-const logger = require('../config/logger');
 const { templateRepository } = require('../repositories');
 const { enqueueYoutubeUpload } = require('./youtubeQueue.service');
 
@@ -38,9 +37,9 @@ class TemplateService {
             ],
           },
         });
-        logger.info({ templateId: template._id }, 'YouTube upload queued for template');
+        console.log({ templateId: template._id }, 'YouTube upload queued for template');
       } catch (err) {
-        logger.warn({ err, templateId: template._id }, 'Could not queue YouTube upload');
+        console.warn({ err, templateId: template._id }, 'Could not queue YouTube upload');
       }
     }
 
@@ -97,7 +96,7 @@ class TemplateService {
     user.cart = user.cart.filter((id) => id.toString() !== templateId);
     await user.save({ validateBeforeSave: false });
 
-    logger.info({ templateId, userId: user._id }, 'Template purchased');
+    console.log({ templateId, userId: user._id }, 'Template purchased');
 
     return {
       message: 'Purchase successful',
