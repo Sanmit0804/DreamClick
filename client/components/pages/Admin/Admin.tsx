@@ -20,6 +20,7 @@ import ManageUser from './UserManagement/ManageUser';
 import EditUser from './UserManagement/SingleUser';
 import AdminTemplates from './TemplateManagement/AdminTemplates';
 import YoutubeAdmin from './Youtube/YoutubeAdmin';
+import Dashboard from './Dashboard';
 import useDeviceType from '@/hooks/useDeviceType';
 
 interface MenuItem {
@@ -166,27 +167,27 @@ const Admin = () => {
             case '/admin/orders': return <PageTransition pathKey={pathname}><OrdersList /></PageTransition>;
             case '/admin/orders/create': return <PageTransition pathKey={pathname}><CreateOrder /></PageTransition>;
             case '/admin/orders/pending': return <PageTransition pathKey={pathname}><PendingOrders /></PageTransition>;
-            
+
             case '/admin/products': return <PageTransition pathKey={pathname}><ProductsList /></PageTransition>;
             case '/admin/products/create': return <PageTransition pathKey={pathname}><CreateProduct /></PageTransition>;
             case '/admin/products/categories': return <PageTransition pathKey={pathname}><ProductCategories /></PageTransition>;
-            
+
             case '/admin/customers': return <PageTransition pathKey={pathname}><CustomersList /></PageTransition>;
             case '/admin/customers/create': return <PageTransition pathKey={pathname}><CreateCustomer /></PageTransition>;
             case '/admin/customers/groups': return <PageTransition pathKey={pathname}><CustomerGroups /></PageTransition>;
-            
+
             case '/admin/analytics/sales': return <PageTransition pathKey={pathname}><SalesAnalytics /></PageTransition>;
             case '/admin/analytics/customers': return <PageTransition pathKey={pathname}><CustomerAnalytics /></PageTransition>;
             case '/admin/analytics/products': return <PageTransition pathKey={pathname}><ProductAnalytics /></PageTransition>;
-            
+
             case '/admin/settings/general': return <PageTransition pathKey={pathname}><GeneralSettings /></PageTransition>;
-            
+
             case '/admin/templates': return <PageTransition pathKey={pathname}><AdminTemplates /></PageTransition>;
-            
+
             case '/admin/youtube': return <PageTransition pathKey={pathname}><YoutubeAdmin /></PageTransition>;
-            
-            case '/admin': 
-            default: 
+
+            case '/admin':
+            default:
                 return <PageTransition pathKey={pathname}><Dashboard /></PageTransition>;
         }
     };
@@ -256,8 +257,8 @@ const Admin = () => {
                     </div>
 
                     <div className="p-4 border-t mt-auto">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className={`w-full gap-2 justify-start ${isMobile ? 'px-0 justify-center' : ''}`}
                             onClick={() => router.push('/dashboard')}
                             title="Back to Website"
@@ -309,31 +310,6 @@ const Admin = () => {
         </div>
     );
 };
-
-const Dashboard = () => (
-    <div>
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-                { title: 'Quick Stats', text: 'Welcome to your admin dashboard' },
-                { title: 'Recent Activity', text: 'No recent activity' },
-                { title: 'Notifications', text: 'No new notifications' },
-            ].map((card, i) => (
-                <motion.div
-                    key={card.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08 }}
-                    whileHover={{ y: -4 }}
-                    className="bg-card border rounded-lg p-6"
-                >
-                    <h3 className="font-semibold mb-2">{card.title}</h3>
-                    <p>{card.text}</p>
-                </motion.div>
-            ))}
-        </div>
-    </div>
-);
 
 const OrdersList = () => <div><h1 className="text-3xl font-bold mb-8">All Orders</h1><p>Order list content...</p></div>;
 const CreateOrder = () => <div><h1 className="text-3xl font-bold mb-8">Create Order</h1><p>Create order form...</p></div>;

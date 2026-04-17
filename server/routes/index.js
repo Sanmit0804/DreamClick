@@ -3,6 +3,7 @@ const router = express.Router();
 
 const UserRouter = require('./user.route');
 const TemplateRouter = require('./template.route');
+const AdminRouter = require('./admin.route');
 
 const routes = [
     {
@@ -12,6 +13,10 @@ const routes = [
     {
         path: '/templates',
         router: TemplateRouter,
+    },
+    {
+        path: '/admin',
+        router: AdminRouter,
     },
 ];
 
