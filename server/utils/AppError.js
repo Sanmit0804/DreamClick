@@ -1,19 +1,17 @@
 class AppError extends Error {
   constructor(message, statusCode, errorCode = null, details = null) {
     super(message);
-    
+
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.errorCode = errorCode;
     this.details = details;
     this.timestamp = new Date().toISOString();
-    this.isOperational = true; // Mark as operational error (trusted errors)
-    
-    // Capture stack trace (excluding constructor call from the trace)
+    this.isOperational = true;
+
     Error.captureStackTrace(this, this.constructor);
   }
 
-  // Static factory methods for common error types
   static badRequest(message = 'Bad Request', errorCode = 'BAD_REQUEST', details = null) {
     return new AppError(message, 400, errorCode, details);
   }
@@ -46,21 +44,21 @@ class AppError extends Error {
     return new AppError(message, 503, errorCode, details);
   }
 
-  // Convert to JSON for API response
   toJSON() {
     return {
       success: false,
+      message: this.message,
+      errorCode: this.errorCode,
       error: {
         message: this.message,
         errorCode: this.errorCode,
         statusCode: this.statusCode,
         details: this.details,
-        timestamp: this.timestamp
-      }
+        timestamp: this.timestamp,
+      },
     };
   }
 
-  // Convert to plain object (for logging or other purposes)
   toObject() {
     return {
       name: this.name,
@@ -69,12 +67,11 @@ class AppError extends Error {
       errorCode: this.errorCode,
       details: this.details,
       timestamp: this.timestamp,
-      stack: this.stack
+      stack: this.stack,
     };
   }
 }
 
-// Specific error types for common use cases
 class ValidationError extends AppError {
   constructor(message = 'Validation failed', details = null) {
     super(message, 422, 'VALIDATION_ERROR', details);
@@ -111,5 +108,5 @@ module.exports = {
   AuthenticationError,
   AuthorizationError,
   ResourceNotFoundError,
-  DatabaseError
+  DatabaseError,
 };

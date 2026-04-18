@@ -2,26 +2,31 @@ const authService = require('../services/auth.service');
 const catchAsync = require('../utils/catchAsync');
 
 class AuthController {
-    static login = catchAsync(async (req, res) => {
-        const { email, password } = req.body;
-        const result = await authService.login(email, password);
-        res.status(200).json(result);
-    });
+  static login = catchAsync(async (req, res) => {
+    const { email, password } = req.body;
+    const result = await authService.login(email, password);
+    res.status(200).json(result);
+  });
 
-    static signup = catchAsync(async (req, res) => {
-        const user = await authService.signup(req.body);
-        res.status(201).json({ message: 'User created successfully', user });
+  static signup = catchAsync(async (req, res) => {
+    const result = await authService.signup(req.body);
+    res.status(201).json({
+      message: 'User created successfully',
+      user: result.user,
+      token: result.token,
+      data: result,
     });
+  });
 
-    static emailLogin = catchAsync(async (req, res) => {
-        const { email, guestCart, guestFavorites } = req.body;
-        const result = await authService.emailLogin(email, guestCart, guestFavorites);
-        res.status(200).json(result);
-    });
+  static emailLogin = catchAsync(async (req, res) => {
+    const { email, guestCart, guestFavorites } = req.body;
+    const result = await authService.emailLogin(email, guestCart, guestFavorites);
+    res.status(200).json(result);
+  });
 
-    static verify = catchAsync(async (req, res) => {
-        res.status(200).json({ valid: true, user: req.user });
-    });
+  static verify = catchAsync(async (req, res) => {
+    res.status(200).json({ valid: true, user: req.user });
+  });
 }
 
 module.exports = AuthController;

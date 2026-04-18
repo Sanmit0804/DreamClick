@@ -2,7 +2,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save, Loader2, Eye, EyeOff, Edit, Key } from 'lucide-react';
 import { toast } from 'sonner';
@@ -81,11 +81,11 @@ export const userSchema = z.object({
 });
 
 export type UserFormData = z.infer<typeof userSchema>;
+type UserMode = 'new' | 'view' | 'edit';
 
 const SingleUser = () => {
-    const params = useParams();
-    const id = params?.id as string;
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
 
@@ -93,11 +93,21 @@ const SingleUser = () => {
     const [showPassword, setShowPassword] = React.useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
-    // Determine mode from URL params
-    const urlMode = searchParams.get('mode');
-    const mode = id && id !== 'new'
-        ? (urlMode || 'view')
-        : 'new';
+    const id = React.useMemo(() => {
+        const segments = pathname.split('/').filter(Boolean);
+        const usersIndex = segments.indexOf('users');
+        const userId = usersIndex >= 0 ? segments[usersIndex + 1] : undefined;
+
+        return userId && userId !== 'new' ? userId : null;
+    }, [pathname]);
+
+    // The admin page is rendered by a catch-all route, so derive the screen state
+    // from the URL path/query instead of expecting a dynamic `params.id`.
+    const mode = React.useMemo<UserMode>(() => {
+        if (!id) return 'new';
+
+        return searchParams.get('mode') === 'edit' ? 'edit' : 'view';
+    }, [id, searchParams]);
 
     // Fetch user data for edit/view modes
     const {
@@ -106,16 +116,24 @@ const SingleUser = () => {
         error,
     } = useQuery({
         queryKey: ['user', id],
-        queryFn: () => userService.getUserById(id!),
-        enabled: !!id && mode !== 'new',
+        queryFn: () => userService.getUserById(id as string),
+        enabled: !!id,
     });
+
+    const buildUserPayload = (data: UserFormData, includePassword: boolean) => {
+        const { confirmPassword, password, ...userData } = data;
+        const payload: any = { ...userData };
+
+        if (includePassword && password?.trim()) {
+            payload.password = password.trim();
+        }
+
+        return payload;
+    };
 
     // Create user mutation
     const createMutation = useMutation({
-        mutationFn: (data: UserFormData) => {
-            const { confirmPassword, ...userData } = data;
-            return userService.createUser(userData);
-        },
+        mutationFn: (data: UserFormData) => userService.createUser(buildUserPayload(data, true)),
         onSuccess: (newUser) => {
             toast.success('User created successfully');
             queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -128,17 +146,7 @@ const SingleUser = () => {
 
     // Update user mutation
     const updateMutation = useMutation({
-        mutationFn: (data: UserFormData) => {
-            const { confirmPassword, password, ...userData } = data;
-
-            // Only include password if it's provided (user wants to change it)
-            const updateData: any = { ...userData };
-            if (password && password.trim() !== '') {
-                updateData.password = password;
-            }
-
-            return userService.updateUser(id!, updateData);
-        },
+        mutationFn: (data: UserFormData) => userService.updateUser(id as string, buildUserPayload(data, true)),
         onSuccess: () => {
             toast.success('User updated successfully');
             queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -231,9 +239,17 @@ const SingleUser = () => {
     }, [user, form, mode]);
 
     const onSubmit = (data: UserFormData) => {
+        if (mode === 'new' && !data.password?.trim()) {
+            form.setError('password', {
+                type: 'manual',
+                message: 'Password is required',
+            });
+            return;
+        }
+
         if (mode === 'new') {
             createMutation.mutate(data);
-        } else if (mode === 'edit') {
+        } else if (mode === 'edit' && id) {
             updateMutation.mutate(data);
         }
     };

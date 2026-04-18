@@ -1,25 +1,49 @@
 const express = require('express');
 const { templateController } = require('../controllers/index');
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, optionalAuthenticate } = require('../middlewares/auth.middleware');
+const validate = require('../middlewares/validate.middleware');
+const { templateValidator } = require('../validators');
 
 const router = express.Router();
 
-// ── Public: anyone can browse templates ─────────────────────────────────────
-// Authenticated users can also pass ?mine=true to filter their own uploads.
-// We use authenticate as optional: attach user if token present, else continue.
-const optionalAuth = (req, res, next) => {
-    const auth = req.headers['authorization'];
-    if (!auth) return next();
-    authenticate(req, res, next);
-};
+router.get(
+  '/',
+  optionalAuthenticate,
+  validate({ query: templateValidator.listTemplatesQuery }),
+  templateController.getTemplates
+);
+router.get(
+  '/:id',
+  validate({ params: templateValidator.templateParams }),
+  templateController.getTemplateById
+);
 
-router.get('/', optionalAuth, templateController.getTemplates);
-router.get('/:id', templateController.getTemplateById);
-
-// ── Protected: must be logged in ────────────────────────────────────────────
-router.post('/', authenticate, templateController.createTemplate);
-router.post('/:id/purchase', authenticate, templateController.purchaseTemplate);
-router.patch('/:id', authenticate, templateController.updateTemplate);
-router.delete('/:id', authenticate, templateController.deleteTemplate);
+router.post(
+  '/',
+  authenticate,
+  validate({ body: templateValidator.templateBody }),
+  templateController.createTemplate
+);
+router.post(
+  '/:id/purchase',
+  authenticate,
+  validate({ params: templateValidator.templateParams }),
+  templateController.purchaseTemplate
+);
+router.patch(
+  '/:id',
+  authenticate,
+  validate({
+    params: templateValidator.templateParams,
+    body: templateValidator.updateTemplateBody,
+  }),
+  templateController.updateTemplate
+);
+router.delete(
+  '/:id',
+  authenticate,
+  validate({ params: templateValidator.templateParams }),
+  templateController.deleteTemplate
+);
 
 module.exports = router;

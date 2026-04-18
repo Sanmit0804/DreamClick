@@ -25,7 +25,6 @@ const CATEGORIES = [
 type FormValues = {
     templateName: string;
     templateDescription: string;
-    videoUrl: string;
     templatePrice: number;
     templateOldPrice?: number;
     templateCategory: string;
@@ -42,6 +41,8 @@ interface AddTemplateModalProps {
 
 const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, onSuccess }) => {
     const [selectedCategory, setSelectedCategory] = useState('General');
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [templateFile, setTemplateFile] = useState<File | null>(null);
 
     const {
         register,
@@ -53,11 +54,25 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
     });
 
     const onSubmit = async (data: FormValues) => {
+        if (!videoFile) {
+            toast.error('Please select a preview video file.');
+            return;
+        }
+
         try {
+            // First, upload the video file
+            const activeVideoUrl = await templateService.uploadFile(videoFile);
+            
+            // Optionally, upload template file if selected
+            let activeTemplateFileUrl = data.templateFileUrl?.trim();
+            if (templateFile) {
+                activeTemplateFileUrl = await templateService.uploadFile(templateFile);
+            }
+
             const payload: CreateTemplatePayload = {
                 templateName: data.templateName.trim(),
                 templateDescription: data.templateDescription.trim(),
-                videoUrl: data.videoUrl.trim(),
+                videoUrl: activeVideoUrl,
                 templatePrice: Number(data.templatePrice),
                 templateOldPrice: data.templateOldPrice ? Number(data.templateOldPrice) : undefined,
                 templateCategory: selectedCategory,
@@ -65,14 +80,18 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
                     ? data.templateTags.split(',').map((t) => t.trim()).filter(Boolean)
                     : [],
                 templateThumbnail: data.templateThumbnail?.trim() || undefined,
-                templateFileUrl: data.templateFileUrl?.trim() || undefined,
+                templateFileUrl: activeTemplateFileUrl || undefined,
             };
 
             const newTemplate = await templateService.createTemplate(payload);
-            toast.success('Template uploaded successfully! 🎉');
+            toast.success('Template uploaded! The YouTube upload is queued in the background 🚀');
             onSuccess(newTemplate);
+            
+            // Reset state
             reset();
             setSelectedCategory('General');
+            setVideoFile(null);
+            setTemplateFile(null);
             onClose();
         } catch (err: any) {
             const message = err?.response?.data?.error?.message || err?.message || 'Failed to upload template';
@@ -83,6 +102,8 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
     const handleClose = () => {
         reset();
         setSelectedCategory('General');
+        setVideoFile(null);
+        setTemplateFile(null);
         onClose();
     };
 
@@ -130,38 +151,39 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
                         )}
                     </div>
 
-                    {/* Preview Video URL */}
+                    {/* Preview Video File */}
                     <div className="space-y-1.5">
-                        <Label htmlFor="videoUrl">Preview Video URL <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="videoFile">Preview Video (Shorts format) <span className="text-destructive">*</span></Label>
                         <Input
-                            id="videoUrl"
-                            type="url"
-                            placeholder="https://…"
-                            {...register('videoUrl', {
-                                required: 'Preview video URL is required',
-                                pattern: { value: /^https?:\/\/.+/, message: 'Enter a valid URL' },
-                            })}
+                            id="videoFile"
+                            type="file"
+                            accept="video/mp4,video/quicktime"
+                            onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)}
                         />
-                        {errors.videoUrl && (
-                            <p className="text-xs text-destructive">{errors.videoUrl.message}</p>
-                        )}
+                        <p className="text-xs text-muted-foreground mr-1">
+                            This video gets uploaded directly to your connected YouTube Shorts channel.
+                        </p>
                     </div>
 
-                    {/* VN Template File URL */}
+                    {/* VN Template File URL or File */}
                     <div className="space-y-1.5">
-                        <Label htmlFor="templateFileUrl" className="flex items-center gap-1.5">
+                        <Label htmlFor="templateFile" className="flex items-center gap-1.5">
                             <Upload className="h-3.5 w-3.5" />
-                            VN Template File URL
+                            VN Template Source File <span className="text-muted-foreground text-xs">(optional)</span>
                         </Label>
+                        <Input
+                            id="templateFile"
+                            type="file"
+                            accept=".vnp,.zip,.rar"
+                            onChange={(e) => setTemplateFile(e.target.files ? e.target.files[0] : null)}
+                        />
+                        <div className="text-center my-1 text-xs text-muted-foreground">OR</div>
                         <Input
                             id="templateFileUrl"
                             type="url"
-                            placeholder="Link to downloadable .vnp / .zip file"
+                            placeholder="Paste external link if file is too large"
                             {...register('templateFileUrl')}
                         />
-                        <p className="text-xs text-muted-foreground">
-                            Upload your file to storage first, then paste the URL here.
-                        </p>
                     </div>
 
                     {/* Category */}

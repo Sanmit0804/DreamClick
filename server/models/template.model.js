@@ -24,6 +24,14 @@ const templateSchema = new mongoose.Schema(
             trim: true,
             default: null,
         },
+        youtubeVideoId: {
+            type: String,
+            default: null,
+        },
+        youtubeVideoUrl: {
+            type: String,
+            default: null,
+        },
         templatePrice: {
             type: Number,
             required: [true, 'Price is required'],
@@ -63,6 +71,8 @@ const templateSchema = new mongoose.Schema(
 // Index for common queries
 templateSchema.index({ templateCategory: 1 });
 templateSchema.index({ createdAt: -1 });
+templateSchema.index({ userId: 1, createdAt: -1 });
+templateSchema.index({ templateName: 'text', templateDescription: 'text', templateTags: 'text' });
 
 const TemplateModel = mongoose.model('Template', templateSchema);
 module.exports = TemplateModel;

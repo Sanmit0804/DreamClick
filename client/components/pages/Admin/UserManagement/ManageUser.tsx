@@ -147,7 +147,7 @@ const ManageUser = () => {
                                 size={20}
                                 strokeWidth={1}
                                 cursor="pointer"
-                                onClick={() => router.push(`/admin/users/${row.original._id}?mode=view`)}
+                                onClick={() => router.push(`/admin/users/${row.original._id}`)}
                             />
                         </GenericTooltip>
                         <GenericTooltip content="Delete item" >
@@ -232,7 +232,7 @@ const ManageUser = () => {
                 emptyMessage="No users found."
                 globalSearch
                 extraButtons={
-                    <Button variant="default" onClick={() => router.push('/admin/users/new?mode=new')}>
+                    <Button variant="default" onClick={() => router.push('/admin/users/new')}>
                         Create New User
                     </Button>
                 }
