@@ -62,7 +62,7 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
         try {
             // First, upload the video file
             const activeVideoUrl = await templateService.uploadFile(videoFile);
-            
+
             // Optionally, upload template file if selected
             let activeTemplateFileUrl = data.templateFileUrl?.trim();
             if (templateFile) {
@@ -86,7 +86,7 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
             const newTemplate = await templateService.createTemplate(payload);
             toast.success('Template uploaded! The YouTube upload is queued in the background 🚀');
             onSuccess(newTemplate);
-            
+
             // Reset state
             reset();
             setSelectedCategory('General');
@@ -160,9 +160,9 @@ const AddTemplateModal: React.FC<AddTemplateModalProps> = ({ isOpen, onClose, on
                             accept="video/mp4,video/quicktime"
                             onChange={(e) => setVideoFile(e.target.files ? e.target.files[0] : null)}
                         />
-                        <p className="text-xs text-muted-foreground mr-1">
+                        {/* <p className="text-xs text-muted-foreground mr-1">
                             This video gets uploaded directly to your connected YouTube Shorts channel.
-                        </p>
+                        </p> */}
                     </div>
 
                     {/* VN Template File URL or File */}

@@ -1,3 +1,5 @@
+const fs = require('fs').promises;
+const path = require('path');
 const PQueueImport = require('p-queue');
 const PQueue = PQueueImport.default || PQueueImport;
 const { youtubeRepository } = require('../repositories');
@@ -49,7 +51,23 @@ const enqueueYoutubeUpload = async ({
         await Template.findByIdAndUpdate(templateId, {
           youtubeVideoId: result.videoId,
           youtubeVideoUrl: result.videoUrl,
+          videoUrl: result.videoUrl, // Use YouTube link as primary video preview to save server space
         });
+
+        // Cleanup local file if it exists in uploads
+        try {
+          if (videoUrl && videoUrl.includes('/uploads/')) {
+            const url = new URL(videoUrl);
+            const fileName = path.basename(url.pathname);
+            const filePath = path.join(__dirname, '..', 'uploads', fileName);
+            await fs.unlink(filePath);
+            console.log({ templateId, fileName }, 'Local video deleted after successful YouTube upload');
+          }
+        } catch (cleanupErr) {
+          if (cleanupErr.code !== 'ENOENT') {
+            console.warn({ cleanupErr, templateId, videoUrl }, 'Could not delete local video file');
+          }
+        }
 
         console.log({ templateId, attempt, videoUrl: result.videoUrl }, 'YouTube upload completed');
         return;

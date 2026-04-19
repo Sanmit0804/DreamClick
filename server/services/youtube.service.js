@@ -61,10 +61,27 @@ const optimizeForShorts = (title = '', description = '') => {
 };
 
 const createVideoStream = async (videoPath) => {
+  // If it's already a local file path
   if (!videoPath.startsWith('http://') && !videoPath.startsWith('https://')) {
     return { fileStream: fs.createReadStream(videoPath), tempFilePath: null };
   }
 
+  // Optimize: If it's a local uploads URL, try to use the file system directly
+  if (videoPath.includes('/uploads/')) {
+    try {
+      const url = new URL(videoPath);
+      const fileName = path.basename(url.pathname);
+      const filePath = path.join(__dirname, '..', 'uploads', fileName);
+      
+      // Verify file exists
+      await fsp.access(filePath);
+      return { fileStream: fs.createReadStream(filePath), tempFilePath: null };
+    } catch (err) {
+      console.warn('Local file not found for upload, falling back to download:', videoPath);
+    }
+  }
+
+  // Fallback: Download from URL
   const response = await axios.get(videoPath, {
     responseType: 'arraybuffer',
     timeout: 120_000,

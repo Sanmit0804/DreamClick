@@ -1,7 +1,51 @@
+const fs = require('fs').promises;
+const path = require('path');
 const User = require('../models/user.model');
 const { AppError } = require('../utils/AppError');
 const { templateRepository } = require('../repositories');
 const { enqueueYoutubeUpload } = require('./youtubeQueue.service');
+
+const cleanupLocalFile = async (fileUrl) => {
+  try {
+    if (!fileUrl || !fileUrl.includes('/uploads/')) return;
+    const url = new URL(fileUrl);
+    const fileName = path.basename(url.pathname);
+    const filePath = path.join(__dirname, '..', 'uploads', fileName);
+    await fs.unlink(filePath);
+    console.log(`Cleaned up local file: ${fileName}`);
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      console.warn(`Could not cleanup local file: ${fileUrl}`, err.message);
+    }
+  }
+};
+
+const triggerYoutubeUpload = async (template) => {
+  if (!template.videoUrl || template.videoUrl.includes('youtube.com')) return;
+
+  try {
+    await enqueueYoutubeUpload({
+      videoUrl: template.videoUrl,
+      templateId: template._id.toString(),
+      templateName: template.templateName,
+      triggeredBy: 'auto',
+      metadata: {
+        title: template.templateName,
+        description: template.templateDescription,
+        tags: [
+          ...(template.templateTags || []),
+          'DreamClick',
+          'CapCut',
+          'VideoTemplate',
+          'Shorts',
+        ],
+      },
+    });
+    console.log({ templateId: template._id }, 'YouTube upload queued');
+  } catch (err) {
+    console.warn({ err, templateId: template._id }, 'Could not queue YouTube upload');
+  }
+};
 
 class TemplateService {
   static async getTemplates({ userId } = {}) {
@@ -18,30 +62,7 @@ class TemplateService {
   static async createTemplate(data, requestingUserId) {
     const template = await templateRepository.create({ ...data, userId: requestingUserId });
 
-    if (template.videoUrl) {
-      try {
-        await enqueueYoutubeUpload({
-          videoUrl: template.videoUrl,
-          templateId: template._id.toString(),
-          templateName: template.templateName,
-          triggeredBy: 'auto',
-          metadata: {
-            title: template.templateName,
-            description: template.templateDescription,
-            tags: [
-              ...(template.templateTags || []),
-              'DreamClick',
-              'CapCut',
-              'VideoTemplate',
-              'Shorts',
-            ],
-          },
-        });
-        console.log({ templateId: template._id }, 'YouTube upload queued for template');
-      } catch (err) {
-        console.warn({ err, templateId: template._id }, 'Could not queue YouTube upload');
-      }
-    }
+    await triggerYoutubeUpload(template);
 
     return template;
   }
@@ -57,8 +78,27 @@ class TemplateService {
       throw AppError.forbidden('You do not have permission to update this template');
     }
 
+    const oldVideoUrl = template.videoUrl;
+    const oldFileUrl = template.templateFileUrl;
+
     Object.assign(template, data);
-    return template.save();
+    const updatedTemplate = await template.save();
+
+    // If video changed, trigger new YouTube upload
+    if (data.videoUrl && data.videoUrl !== oldVideoUrl) {
+      await triggerYoutubeUpload(updatedTemplate);
+      // Clean up the old local video if it was local
+      if (oldVideoUrl && oldVideoUrl !== data.videoUrl) {
+        await cleanupLocalFile(oldVideoUrl);
+      }
+    }
+
+    // If template file changed, clean up the old one
+    if (data.templateFileUrl && data.templateFileUrl !== oldFileUrl) {
+      await cleanupLocalFile(oldFileUrl);
+    }
+
+    return updatedTemplate;
   }
 
   static async deleteTemplate(templateId, requestingUser) {
@@ -72,7 +112,15 @@ class TemplateService {
       throw AppError.forbidden('You do not have permission to delete this template');
     }
 
+    const videoUrl = template.videoUrl;
+    const fileUrl = template.templateFileUrl;
+
     await template.deleteOne();
+
+    // Cleanup local files
+    await cleanupLocalFile(videoUrl);
+    await cleanupLocalFile(fileUrl);
+
     return { message: 'Template deleted successfully' };
   }
 
