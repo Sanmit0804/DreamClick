@@ -2,7 +2,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Save, Loader2, Eye, EyeOff, Edit, Key } from 'lucide-react';
 import { toast } from 'sonner';
@@ -84,9 +84,9 @@ export type UserFormData = z.infer<typeof userSchema>;
 type UserMode = 'new' | 'view' | 'edit';
 
 const SingleUser = () => {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
+    const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
 
     // State for password visibility
@@ -137,7 +137,7 @@ const SingleUser = () => {
         onSuccess: (newUser) => {
             toast.success('User created successfully');
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            router.push(`/admin/users`);
+            navigate(`/admin/users`);
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || 'Failed to create user');
@@ -255,14 +255,14 @@ const SingleUser = () => {
     };
 
     const handleSwitchToEdit = () => {
-        router.push(`/admin/users/${id}?mode=edit`);
+        navigate(`/admin/users/${id}?mode=edit`);
     };
 
     const handleCancel = () => {
         if (mode === 'new') {
-            router.push('/admin/users');
+            navigate('/admin/users');
         } else {
-            router.push(`/admin/users/${id}?mode=view`);
+            navigate(`/admin/users/${id}?mode=view`);
             // Reset form to current user data
             if (user) {
                 form.reset({
@@ -321,7 +321,7 @@ const SingleUser = () => {
             <div className="container mx-auto py-6">
                 <div className="text-center py-8">
                     <p className="text-red-500">Error loading user data</p>
-                    <Button onClick={() => router.push('/admin/users')} className="mt-4">
+                    <Button onClick={() => navigate('/admin/users')} className="mt-4">
                         Back to Users
                     </Button>
                 </div>
@@ -360,7 +360,7 @@ const SingleUser = () => {
                     <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => router.push('/admin/users')}
+                        onClick={() => navigate('/admin/users')}
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>

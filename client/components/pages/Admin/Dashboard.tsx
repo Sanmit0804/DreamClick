@@ -18,7 +18,7 @@ import config from '@/config/config';
 import axios from 'axios';
 
 // ─── API ──────────────────────────────────────────────────────────────────────
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const api = axios.create({ baseURL: API_URL });
 api.interceptors.request.use((cfg) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;

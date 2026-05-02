@@ -1,0 +1,18 @@
+@keyframes pendulum-swing {
+  0% {
+    transform: rotate(10deg);
+    transform-origin: top center;
+  }
+  50% {
+    transform: rotate(-10deg);
+    transform-origin: top center;
+  }
+  100% {
+    transform: rotate(10deg);
+    transform-origin: top center;
+  }
+}
+
+.floating-astronaut img {
+  animation: pendulum-swing 3s ease-in-out infinite;
+}

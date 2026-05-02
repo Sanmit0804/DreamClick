@@ -21,10 +21,9 @@ import {
 } from 'lucide-react';
 import styles from './youtube.module.css';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-// We'll map the calls specifically since YouTube is under /youtube, not /api/youtube usually, but let's check index.js
-// Ah, index.js has: app.use('/youtube', youtubeRoute);
-const YT_API_BASE = process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api', '/youtube') : 'http://localhost:5000/youtube';
+const API_BASE = import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : 'http://localhost:5000/api';
+// For youtube routes, replace /api with /youtube if the URL ends with /api
+const YT_API_BASE = import.meta.env.VITE_BACKEND_URL ? import.meta.env.VITE_BACKEND_URL.replace('/api', '/youtube') : 'http://localhost:5000/youtube';
 
 interface ConnectionStatus {
   connected: boolean;

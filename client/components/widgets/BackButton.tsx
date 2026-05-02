@@ -1,7 +1,5 @@
-'use client';
-
 import { ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 interface BackButtonProps {
     children?: React.ReactNode;
@@ -10,11 +8,11 @@ interface BackButtonProps {
 }
 
 const BackButton = ({ children, fallbackPath = '/', className = '' }: BackButtonProps) => {
-    const router = useRouter();
+    const navigate = useNavigate();
 
     return (
         <button
-            onClick={() => router.back()}
+            onClick={() => navigate(-1)}
             className={`flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity ${className}`}
             type="button"
             aria-label="Go back"

@@ -1,4 +1,4 @@
-'use client';
+
 
 import { useState, useEffect } from "react";
 import {
@@ -7,8 +7,7 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
 } from "@/components/ui/navigation-menu";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ModeToggle } from "@/components/mode-toggle";
 import { cn } from "@/lib/utils";
 import { LogIn, LogOut, Menu, UserPlus, ShoppingCart, Heart } from "lucide-react";
@@ -45,8 +44,8 @@ const CountBadge = ({ count }: { count: number }) => {
 };
 
 const Navbar = () => {
-  const pathname = usePathname();
-  const router = useRouter();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -62,7 +61,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     authService.logout();
-    router.push("/login");
+    navigate("/login");
   };
 
   const menuItems = [
@@ -105,7 +104,7 @@ const Navbar = () => {
       <div className="flex items-center md:flex-1">
         <div
           className={cn("text-xl font-bold tracking-tight cursor-pointer", textClasses)}
-          onClick={() => router.push("/dashboard")}
+          onClick={() => navigate("/dashboard")}
         >
           Dream Click
         </div>
@@ -118,7 +117,7 @@ const Navbar = () => {
             {menuItems.map((item) => (
               <NavigationMenuItem key={item.path}>
                 <NavigationMenuLink asChild>
-                  <Link href={item.path} className={cn(getLinkClass(item.path), textClasses)}>
+                  <Link to={item.path} className={cn(getLinkClass(item.path), textClasses)}>
                     {item.label}
                   </Link>
                 </NavigationMenuLink>
@@ -130,7 +129,7 @@ const Navbar = () => {
 
       {/* ── Right Side (Desktop Actions) ── */}
       <div className="hidden md:flex items-center justify-end gap-2 md:flex-1">
-        <span className={userBadgeClasses} onClick={() => router.push("/admin")}>
+        <span className={userBadgeClasses} onClick={() => navigate("/admin")}>
           {currentUser?.name ?? "Guest"}
         </span>
 
@@ -146,7 +145,7 @@ const Navbar = () => {
         {/* Favorites */}
         {showFav && (
           <button
-            onClick={() => router.push("/favorites")}
+            onClick={() => navigate("/favorites")}
             className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
             title="Favorites"
           >
@@ -158,7 +157,7 @@ const Navbar = () => {
         {/* Cart */}
         {showCart && (
           <button
-            onClick={() => router.push("/cart")}
+            onClick={() => navigate("/cart")}
             className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
             title="Cart"
           >
@@ -172,7 +171,7 @@ const Navbar = () => {
       <div className="md:hidden flex items-center justify-end gap-1">
         {showFav && (
           <button
-            onClick={() => router.push("/favorites")}
+            onClick={() => navigate("/favorites")}
             className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
             title="Favorites"
           >
@@ -183,7 +182,7 @@ const Navbar = () => {
 
         {showCart && (
           <button
-            onClick={() => router.push("/cart")}
+            onClick={() => navigate("/cart")}
             className={cn("relative p-2 rounded-full hover:bg-foreground/10 transition-colors shrink-0", textClasses)}
             title="Cart"
           >
@@ -216,7 +215,7 @@ const Navbar = () => {
               <div className="px-6 py-4">
                 <div
                   className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer"
-                  onClick={() => { router.push("/admin"); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate("/admin"); setMobileMenuOpen(false); }}
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={currentUser?.creatorProfile?.avatar} alt={currentUser?.name} />
@@ -243,7 +242,7 @@ const Navbar = () => {
                       key={item.path}
                       variant={pathname === item.path ? "secondary" : "ghost"}
                       className="w-full justify-start gap-3 h-12 px-3"
-                      onClick={() => { router.push(item.path); setMobileMenuOpen(false); }}
+                      onClick={() => { navigate(item.path); setMobileMenuOpen(false); }}
                     >
                       <div className={`w-2 h-2 rounded-full ${pathname === item.path ? "bg-primary" : "bg-muted-foreground/30"}`} />
                       <span className="flex-1 text-left">{item.label}</span>
@@ -269,7 +268,7 @@ const Navbar = () => {
                     <Button
                       variant="default"
                       className="w-full gap-2"
-                      onClick={() => { router.push("/login"); setMobileMenuOpen(false); }}
+                      onClick={() => { navigate("/login"); setMobileMenuOpen(false); }}
                     >
                       <LogIn className="h-4 w-4" />
                       Sign In
@@ -277,7 +276,7 @@ const Navbar = () => {
                     <Button
                       variant="outline"
                       className="w-full gap-2"
-                      onClick={() => { router.push("/login?mode=signup"); setMobileMenuOpen(false); }}
+                      onClick={() => { navigate("/login?mode=signup"); setMobileMenuOpen(false); }}
                     >
                       <UserPlus className="h-4 w-4" />
                       Create Account

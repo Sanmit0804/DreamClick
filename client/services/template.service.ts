@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { ApiResponse, VideoTemplate } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 const api = axios.create({ baseURL: API_URL });
 

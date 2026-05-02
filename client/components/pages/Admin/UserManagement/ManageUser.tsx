@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import ConfirmationBox from '@/components/ConfirmationBox';
 import { format, startOfMonth, isAfter } from 'date-fns';
 import config from '@/config/config';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 // Define the User type
@@ -27,7 +27,7 @@ const ManageUser = () => {
     const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
     const [userToDelete, setUserToDelete] = React.useState<string | null>(null);
     const [userName, setUserName] = React.useState<string>('');
-    const router = useRouter();
+    const navigate = useNavigate();
 
     // Fetch users with React Query
     const {
@@ -139,7 +139,7 @@ const ManageUser = () => {
                                 size={20}
                                 strokeWidth={1}
                                 cursor="pointer"
-                                onClick={() => router.push(`/admin/users/${row.original._id}?mode=edit`)}
+                                onClick={() => navigate(`/admin/users/${row.original._id}?mode=edit`)}
                             />
                         </GenericTooltip>
                         <GenericTooltip content="View User">
@@ -147,7 +147,7 @@ const ManageUser = () => {
                                 size={20}
                                 strokeWidth={1}
                                 cursor="pointer"
-                                onClick={() => router.push(`/admin/users/${row.original._id}`)}
+                                onClick={() => navigate(`/admin/users/${row.original._id}`)}
                             />
                         </GenericTooltip>
                         <GenericTooltip content="Delete item" >
@@ -232,7 +232,7 @@ const ManageUser = () => {
                 emptyMessage="No users found."
                 globalSearch
                 extraButtons={
-                    <Button variant="default" onClick={() => router.push('/admin/users/new')}>
+                    <Button variant="default" onClick={() => navigate('/admin/users/new')}>
                         Create New User
                     </Button>
                 }

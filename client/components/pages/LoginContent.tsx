@@ -1,8 +1,8 @@
-'use client';
+
 
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import Image from "next/image"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,7 @@ import authService from "@/services/auth"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
 import useDeviceType from "@/hooks/useDeviceType"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 // ✅ Define Zod schemas for validation
 const loginSchema = z.object({
@@ -81,8 +81,8 @@ type LoginFormData = z.infer<typeof loginSchema>
 type SignupFormData = z.infer<typeof signupSchema>
 
 export default function Auth() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
     const currentDevice = useDeviceType();
     const [currentTab, setCurrentTab] = useState("basic");
@@ -99,7 +99,7 @@ export default function Auth() {
     // Update URL when mode changes
     const updateUrlMode = (isLogin: boolean) => {
         const newMode = isLogin ? 'login' : 'signup';
-        router.replace(`/login?mode=${newMode}`);
+        navigate(`/login?mode=${newMode}`, { replace: true });
     }
 
     // Sync state with URL changes
@@ -150,7 +150,7 @@ export default function Auth() {
             // Check for redirect path
             const redirectPath = localStorage.getItem('redirectPath') || '/dashboard';
             localStorage.removeItem('redirectPath');
-            router.push(redirectPath);
+            navigate(redirectPath);
         } catch (error: any) {
             const message = error?.message || "Login failed. Please check your credentials and try again.";
             toast.error(message);
@@ -201,13 +201,10 @@ export default function Auth() {
             {/* Left Image Section */}
             {currentDevice == 'laptop' && (
                 <div className="w-1/2 h-full relative overflow-hidden floating-astronaut">
-                    <Image
+                    <img
                         src="/astronaut_copy.png"
                         alt="Login Illustration"
-                        fill
-                        className="object-contain -translate-y-6"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        priority
+                        className="object-contain -translate-y-6 w-full h-full"
                     />
                 </div>
             )}

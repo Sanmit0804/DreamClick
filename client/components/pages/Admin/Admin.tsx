@@ -1,8 +1,7 @@
-'use client';
+
 
 import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarTrigger,
@@ -50,8 +49,8 @@ const PageTransition: React.FC<{ children: React.ReactNode; pathKey: string }> =
 );
 
 const Admin = () => {
-    const router = useRouter();
-    const pathname = usePathname();
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
     const deviceType = useDeviceType();
 
     const menuItems: MenuItem[] = [
@@ -122,8 +121,8 @@ const Admin = () => {
         },
     ];
 
-    const handleMenuItemClick = (item: MenuItem) => item.path && router.push(item.path);
-    const handleSubItemClick = (path: string) => router.push(path);
+    const handleMenuItemClick = (item: MenuItem) => item.path && navigate(item.path);
+    const handleSubItemClick = (path: string) => navigate(path);
     const isMenuItemActive = (item: MenuItem): boolean => {
         if (item.path && pathname === item.path) return true;
         if (item.subItems?.some((sub) => pathname === sub.path)) return true;
@@ -260,7 +259,7 @@ const Admin = () => {
                         <Button
                             variant="outline"
                             className={`w-full gap-2 justify-start ${isMobile ? 'px-0 justify-center' : ''}`}
-                            onClick={() => router.push('/dashboard')}
+                            onClick={() => navigate('/dashboard')}
                             title="Back to Website"
                         >
                             <Globe className="h-4 w-4" />
@@ -289,7 +288,7 @@ const Admin = () => {
                                                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
                                             ) : (
                                                 <BreadcrumbLink asChild>
-                                                    <Link href={item.href}>{item.label}</Link>
+                                                    <Link to={item.href}>{item.label}</Link>
                                                 </BreadcrumbLink>
                                             )}
                                         </BreadcrumbItem>

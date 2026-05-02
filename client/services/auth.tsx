@@ -37,7 +37,7 @@ interface ApiError {
     error?: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 // Create axios instance with default config (without withCredentials)
 const api = axios.create({
@@ -71,7 +71,9 @@ api.interceptors.response.use(
             // Auto logout if 401 response
             localStorage.removeItem("token")
             localStorage.removeItem("user")
-            window.location.href = '/login'
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login'
+            }
         }
         
         throw error

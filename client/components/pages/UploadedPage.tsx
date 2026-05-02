@@ -1,7 +1,7 @@
 import { Trash2, RefreshCw, Image as ImageIcon, Copy, ExternalLink } from "lucide-react";
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
+
 
 interface UploadedFile {
   name: string;
@@ -125,12 +125,10 @@ const UploadedPage = () => {
                 className="bg-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="aspect-square bg-muted relative">
-                  <Image
+                  <img
                     src={file.url}
                     alt={file.name}
-                    fill
-                    className="object-cover cursor-pointer"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+                    className="object-cover cursor-pointer w-full h-full absolute inset-0"
                     onClick={() => window.open(file.url, '_blank')}
                   />
                 </div>

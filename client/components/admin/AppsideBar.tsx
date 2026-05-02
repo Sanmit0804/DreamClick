@@ -1,7 +1,6 @@
-"use client";
+
 import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -34,7 +33,7 @@ interface MenuItem {
 
 export function AppSidebar({ items }: { items: MenuItem[] }) {
   const { open } = useSidebar();
-  const pathname = usePathname();
+  const { pathname } = useLocation();
 
   const isActive = (path?: string) => (path ? pathname === path : false);
   const isGroupOpen = (item: MenuItem) =>
@@ -63,7 +62,7 @@ export function AppSidebar({ items }: { items: MenuItem[] }) {
                           {item.subItems.map((sub) => (
                             <SidebarMenuSubItem key={sub.id}>
                               <SidebarMenuSubButton asChild isActive={isActive(sub.path)}>
-                                <Link href={sub.path}>
+                                <Link to={sub.path}>
                                   {sub.icon && <sub.icon className="mr-2 h-4 w-4" />}
                                   {sub.label}
                                 </Link>
@@ -77,7 +76,7 @@ export function AppSidebar({ items }: { items: MenuItem[] }) {
                 ) : (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild isActive={isActive(item.path)}>
-                      <Link href={item.path!}>
+                      <Link to={item.path!}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
                       </Link>

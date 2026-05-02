@@ -1,29 +1,28 @@
-'use client';
+
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Camera, Video, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import { useNavigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
-const Threads = dynamic(() => import("@/components/backgrounds/Threads"), {
-  ssr: false,
-  loading: () => null,
-});
+const Threads = lazy(() => import("@/components/backgrounds/Threads"));
 
 const Home = () => {
-    const router = useRouter();
+    const navigate = useNavigate();
 
     return (
         <div className="min-h-[calc(100vh-8rem)] overflow-hidden flex flex-col items-center justify-center px-6 py-12 bg-background text-foreground">
             <div className="absolute inset-0 opacity-70">
-                <Threads
-                    color={[0.62, 0.82, 1]}
-                    amplitude={1.1}
-                    distance={0.12}
-                    enableMouseInteraction
-                />
+                <Suspense fallback={null}>
+                    <Threads
+                        color={[0.62, 0.82, 1]}
+                        amplitude={1.1}
+                        distance={0.12}
+                        enableMouseInteraction
+                    />
+                </Suspense>
             </div>
             <div className="absolute inset-0 pointer-events-none bg-background/70" />
 
@@ -36,12 +35,12 @@ const Home = () => {
                     Explore stunning photos, cinematic videos, and premium Video templates.
                 </p>
                 <div className="flex gap-5 justify-center">
-                    <Button size="lg" className="group" onClick={() => router.push('/video-templates')}>
+                    <Button size="lg" className="group" onClick={() => navigate('/video-templates')}>
                         Get Started
                         <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
 
-                    <Button size="lg" variant="outline" className="group" onClick={() => router.push('/about')}>
+                    <Button size="lg" variant="outline" className="group" onClick={() => navigate('/about')}>
                         Learn more
                     </Button>
                 </div>
@@ -53,7 +52,7 @@ const Home = () => {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                 >
-                    <Card className="cursor-pointer hover:shadow-xl transition-all" onClick={() => router.push('/explore')}>
+                    <Card className="cursor-pointer hover:shadow-xl transition-all" onClick={() => navigate('/explore')}>
                         <CardContent className="flex flex-col items-center justify-center py-10">
                             <Camera className="h-10 w-10 text-primary mb-3" />
                             <h3 className="font-semibold text-lg mb-2">Photos</h3>
@@ -83,7 +82,7 @@ const Home = () => {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                 >
-                    <Card className="cursor-pointer hover:shadow-xl transition-all" onClick={() => router.push('/video-templates')}>
+                    <Card className="cursor-pointer hover:shadow-xl transition-all" onClick={() => navigate('/video-templates')}>
                         <CardContent className="flex flex-col items-center justify-center py-10">
                             <Sparkles className="h-10 w-10 text-primary mb-3" />
                             <h3 className="font-semibold text-lg mb-2">Video Templates</h3>

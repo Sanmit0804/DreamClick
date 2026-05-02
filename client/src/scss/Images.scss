@@ -1,0 +1,33 @@
+.lg-react-element {
+    column-count: 4;
+    column-gap: 15px;
+
+    @media (max-width: 900px) {
+        column-count: 3;
+    }
+
+    @media (max-width: 600px) {
+        column-count: 2;
+    }
+
+
+}
+
+.lg-react-element a {
+    display: block;
+    break-inside: avoid;
+    margin-bottom: 15px;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+    padding: 5px 0px;
+    border-radius: 10px;
+    transition: transform 0.2s;
+}
+
+img:hover {
+    filter: opacity(.9);
+    transform: scale(1.01);
+}
