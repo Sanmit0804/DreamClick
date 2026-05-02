@@ -20,6 +20,7 @@ import EditUser from './UserManagement/SingleUser';
 import AdminTemplates from './TemplateManagement/AdminTemplates';
 import YoutubeAdmin from './Youtube/YoutubeAdmin';
 import Dashboard from './Dashboard';
+import GeneralSettings from './Settings/GeneralSettings';
 import useDeviceType from '@/hooks/useDeviceType';
 
 interface MenuItem {
@@ -322,6 +323,5 @@ const CustomerGroups = () => <div><h1 className="text-3xl font-bold mb-8">Custom
 const SalesAnalytics = () => <div><h1 className="text-3xl font-bold mb-8">Sales Analytics</h1><p>Sales charts and data...</p></div>;
 const CustomerAnalytics = () => <div><h1 className="text-3xl font-bold mb-8">Customer Analytics</h1><p>Customer insights...</p></div>;
 const ProductAnalytics = () => <div><h1 className="text-3xl font-bold mb-8">Product Analytics</h1><p>Product performance...</p></div>;
-const GeneralSettings = () => <div><h1 className="text-3xl font-bold mb-8">General Settings</h1><p>General configuration...</p></div>;
 
 export default Admin;

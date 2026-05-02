@@ -1,11 +1,16 @@
 'use client';
 
 import { useState } from "react";
+import { useSettings } from "@/context/SettingsContext";
 import { motion } from "framer-motion";
 import { Mail, Instagram, Copy, CheckCircle2, ExternalLink } from "lucide-react";
 
 const Contact = () => {
-  const email = "dreamclick0823@gmail.com";
+  const { settings } = useSettings();
+  const email = settings?.contactEmail || "dreamclick0823@gmail.com";
+  const instagramUrl = settings?.socialLinks.instagram || "https://www.instagram.com/dream_.click/";
+  const instagramHandle = instagramUrl.split('/').filter(Boolean).pop() || "dream_.click";
+  
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -86,7 +91,7 @@ const Contact = () => {
 
           {/* Instagram Card */}
           <a
-            href="https://www.instagram.com/dream_.click/"
+            href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="group relative bg-card/60 hover:bg-accent/30 border border-border/50 rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center space-y-4 sm:space-y-5 transition-all duration-500 overflow-hidden shadow-sm hover:shadow-md cursor-pointer"
@@ -97,7 +102,7 @@ const Contact = () => {
             </div>
             <div className="space-y-1 sm:space-y-1.5 relative z-10">
               <h2 className="text-lg sm:text-xl font-semibold text-foreground">Instagram</h2>
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium">@dream_.click</p>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium">@{instagramHandle}</p>
             </div>
             
             <div className="mt-2 sm:mt-3 relative z-10 flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-secondary/60 group-hover:bg-secondary text-xs sm:text-sm font-medium transition-colors">

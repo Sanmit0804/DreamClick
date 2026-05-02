@@ -4,6 +4,7 @@ const router = express.Router();
 const UserRouter = require('./user.route');
 const TemplateRouter = require('./template.route');
 const AdminRouter = require('./admin.route');
+const SettingsRouter = require('./setting.routes');
 
 const routes = [
     {
@@ -17,6 +18,10 @@ const routes = [
     {
         path: '/admin',
         router: AdminRouter,
+    },
+    {
+        path: '/settings',
+        router: SettingsRouter,
     },
 ];
 

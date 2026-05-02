@@ -8,6 +8,8 @@ import { AuthInitializer } from '@/components/providers/AuthInitializer';
 import Navbar from '@/components/Navbar';
 import ConfirmationBox from '@/components/ConfirmationBox';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { SettingsProvider, useSettings } from '@/context/SettingsContext';
+import MaintenancePage from '@/components/pages/MaintenancePage';
 
 // Page components
 import Home from '@/components/pages/Home';
@@ -133,56 +135,74 @@ const AdminLayout = () => {
 };
 
 // ── Router ───────────────────────────────────────────────────────────────────
-const AppRoutes = () => (
-  <Routes>
-    {/* Root redirect */}
-    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+const AppRoutes = () => {
+  const { settings, loading } = useSettings();
+  const location = useLocation();
 
-    {/* Auth routes (no Navbar) */}
-    <Route path="/login" element={
-      <Suspense fallback={<div className="min-h-screen w-full flex items-center justify-center"><LoadingSpinner /></div>}>
-        <Login />
-      </Suspense>
-    } />
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner /></div>;
 
-    {/* Public routes (with Navbar) */}
-    <Route element={<PublicLayout />}>
-      <Route path="/dashboard" element={<Home />} />
-      <Route path="/explore" element={<Images />} />
-      <Route path="/video-templates" element={<VideoTemplates />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/cart" element={<Cart />} />
-      <Route path="/favorites" element={<Favorites />} />
-    </Route>
+  // Show maintenance page if maintenance mode is enabled and user is not an admin
+  const isMaintenanceActive = settings?.maintenanceMode;
+  const isUserAdmin = isAdmin();
+  const isAdminPath = location.pathname.startsWith('/admin');
+  const isAuthPath = location.pathname === '/login';
 
-    {/* Protected routes (auth required) */}
-    <Route element={<ProtectedLayout />}>
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/settings" element={<Settings />} />
-    </Route>
+  if (isMaintenanceActive && !isUserAdmin && !isAdminPath && !isAuthPath) {
+    return <MaintenancePage />;
+  }
 
-    {/* Admin routes */}
-    <Route element={<AdminLayout />}>
-      <Route path="/admin/*" element={<Admin />} />
-    </Route>
+  return (
+    <Routes>
+      {/* Root redirect */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-    {/* 404 */}
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+      {/* Auth routes (no Navbar) */}
+      <Route path="/login" element={
+        <Suspense fallback={<div className="min-h-screen w-full flex items-center justify-center"><LoadingSpinner /></div>}>
+          <Login />
+        </Suspense>
+      } />
 
+      {/* Public routes (with Navbar) */}
+      <Route element={<PublicLayout />}>
+        <Route path="/dashboard" element={<Home />} />
+        <Route path="/explore" element={<Images />} />
+        <Route path="/video-templates" element={<VideoTemplates />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/favorites" element={<Favorites />} />
+      </Route>
+
+      {/* Protected routes (auth required) */}
+      <Route element={<ProtectedLayout />}>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
+
+      {/* Admin routes */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin/*" element={<Admin />} />
+      </Route>
+
+      {/* 404 */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
 // ── App Root ─────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <QueryProvider>
-        <CartFavProvider>
-          <BrowserRouter>
-            <AuthInitializer />
-            <AppRoutes />
-          </BrowserRouter>
-        </CartFavProvider>
+        <SettingsProvider>
+          <CartFavProvider>
+            <BrowserRouter>
+              <AuthInitializer />
+              <AppRoutes />
+            </BrowserRouter>
+          </CartFavProvider>
+        </SettingsProvider>
       </QueryProvider>
       <Toaster />
     </ThemeProvider>
